@@ -1,0 +1,9 @@
+spring:
+  main:
+    web-application-type: none
+  application:
+    name: client-auth-service-init
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
