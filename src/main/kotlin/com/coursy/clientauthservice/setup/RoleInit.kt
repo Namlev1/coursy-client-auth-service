@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Profile("init")
-class RoleSetup {
+class RoleInit {
     @PostConstruct
     fun init() {
         println("role setup here")
