@@ -1,0 +1,54 @@
+package com.coursy.clientauthservice.dto
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.coursy.clientauthservice.failure.Failure
+import com.coursy.clientauthservice.failure.RoleFailure
+import com.coursy.clientauthservice.model.RoleName
+import com.coursy.clientauthservice.types.Email
+import com.coursy.clientauthservice.types.Name
+import com.coursy.clientauthservice.types.Password
+
+data class RegistrationRequest(
+    val firstName: String,
+    val lastName: String,
+    val email: String,
+    val password: String,
+    val roleName: String?
+) : SelfValidating<Failure, RegistrationRequest.Validated> {
+    data class Validated(
+        val firstName: Name,
+        val lastName: Name,
+        val email: Email,
+        val password: Password,
+        val roleName: RoleName
+    )
+
+    override fun validate(): Either<Failure, Validated> {
+        val firstNameResult = Name.create(firstName)
+        val lastNameResult = Name.create(lastName)
+        val emailResult = Email.create(email)
+        val passwordResult = Password.create(password)
+        val roleNameResult = roleName?.let {
+            Either.catch { RoleName.valueOf(it) }
+                .mapLeft { RoleFailure.NotFound }
+        } ?: RoleFailure.IsNull.left()
+
+        val firstError = listOfNotNull(
+            firstNameResult.leftOrNull(),
+            lastNameResult.leftOrNull(),
+            emailResult.leftOrNull(),
+            passwordResult.leftOrNull(),
+            roleNameResult.leftOrNull()
+        ).firstOrNull()
+
+        return firstError?.left() ?: Validated(
+            firstName = firstNameResult.getOrNull()!!,
+            lastName = lastNameResult.getOrNull()!!,
+            email = emailResult.getOrNull()!!,
+            password = passwordResult.getOrNull()!!,
+            roleName = roleNameResult.getOrNull()!!
+        ).right()
+    }
+}

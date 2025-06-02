@@ -8,8 +8,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-  profiles:
-    active: setup
+#  profiles:
+#    active: setup
 app:
   setup:
     roles: "STUDENT, TEACHER, SUPER_ADMIN" # Default roles
