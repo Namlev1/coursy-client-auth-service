@@ -2,11 +2,14 @@ spring:
   application:
     name: client-auth-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:10001}/${DB_NAME:auth_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:10001/auth_db
+    username: postgres
+    password: postgres
   jpa:
     hibernate:
       ddl-auto: update
-#  profiles:
-#    active: init
+  profiles:
+    active: setup
+app:
+  setup:
+    roles: "STUDENT, TEACHER, SUPER_ADMIN" # Default roles

@@ -13,11 +13,11 @@ class ClientAuthServiceApplication(
 ) {
     private val logger = LoggerFactory.getLogger(ClientAuthServiceApplication::class.java)
 
-    @Profile("init")
+    @Profile("setup")
     @PreDestroy
     fun destroy() {
-        if (environment.activeProfiles.contains("init")) {
-            logger.info("Application initialization complete")
+        if (environment.activeProfiles.contains("setup")) {
+            logger.info("Application setup complete")
         }
     }
 }
