@@ -1,15 +1,19 @@
 package com.coursy.clientauthservice.service
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.coursy.clientauthservice.dto.JwtResponse
 import com.coursy.clientauthservice.dto.LoginRequest
+import com.coursy.clientauthservice.dto.RefreshJwtRequest
 import com.coursy.clientauthservice.failure.AuthenticationFailure
 import com.coursy.clientauthservice.failure.Failure
+import com.coursy.clientauthservice.failure.RefreshTokenFailure
 import com.coursy.clientauthservice.jwt.JwtTokenService
 import com.coursy.clientauthservice.repository.UserRepository
 import com.coursy.clientauthservice.security.UserDetailsImp
+import com.coursy.clientauthservice.security.toUserDetails
 import jakarta.transaction.Transactional
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -23,7 +27,7 @@ class AuthService(
     private val userRepository: UserRepository,
     private val authenticationManager: AuthenticationManager,
     private val jwtTokenService: JwtTokenService,
-//    private val refreshTokenService: RefreshTokenService
+    private val refreshTokenService: RefreshTokenService
 ) {
     fun authenticateUser(loginRequest: LoginRequest.Validated): Either<Failure, JwtResponse> {
         val authentication = runCatching {
@@ -37,35 +41,35 @@ class AuthService(
 
         val userDetails = authentication.principal as UserDetailsImp
 
-//        val refreshToken = refreshTokenService.createRefreshToken(userDetails.id)
-//            .fold(
-//                { failure -> return failure.left() },
-//                { token -> token.token }
-//            )
+        val refreshToken = refreshTokenService.createRefreshToken(userDetails.id)
+            .fold(
+                { failure -> return failure.left() },
+                { token -> token.token }
+            )
 
         updateLastLogin(userDetails)
 
         return JwtResponse(
             token = jwt,
-//            refreshToken = refreshToken
+            refreshToken = refreshToken
         ).right()
     }
 
-//    fun refreshJwtToken(refreshRequest: RefreshJwtRequest.Validated): Either<RefreshTokenFailure, JwtResponse> {
-//        val refreshToken = refreshTokenService.findByToken(refreshRequest.refreshToken)
-//            .getOrElse { failure -> return failure.left() }
-//
-//        refreshTokenService.verifyExpiration(refreshToken)
-//            .onLeft { failure -> return failure.left() }
-//
-//        val userDetails = refreshToken.user.toUserDetails()
-//        val newJwt = jwtTokenService.generateJwtToken(userDetails)
-//
-//        return JwtResponse(
-//            token = newJwt,
-//            refreshToken = refreshToken.token
-//        ).right()
-//    }
+    fun refreshJwtToken(refreshRequest: RefreshJwtRequest.Validated): Either<RefreshTokenFailure, JwtResponse> {
+        val refreshToken = refreshTokenService.findByToken(refreshRequest.refreshToken)
+            .getOrElse { failure -> return failure.left() }
+
+        refreshTokenService.verifyExpiration(refreshToken)
+            .onLeft { failure -> return failure.left() }
+
+        val userDetails = refreshToken.user.toUserDetails()
+        val newJwt = jwtTokenService.generateJwtToken(userDetails)
+
+        return JwtResponse(
+            token = newJwt,
+            refreshToken = refreshToken.token
+        ).right()
+    }
 
     private fun updateLastLogin(userDetails: UserDetailsImp) {
         val user = userRepository.findById(userDetails.id).get()
