@@ -1,5 +1,6 @@
 package com.coursy.clientauthservice.security
 
+import com.coursy.clientauthservice.model.RoleName
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -44,9 +45,8 @@ class SecurityConfig(
 //                    .hasAnyAuthority(RoleName.ROLE_ADMIN.toString(), RoleName.ROLE_SUPER_ADMIN.toString())
 //                    .requestMatchers("/v1/super-admin/**").hasAuthority(RoleName.ROLE_SUPER_ADMIN.toString())
 //                    .anyRequest().authenticated()
-                    .requestMatchers(
-                        "/auth/**"
-                    ).permitAll()
+                    .requestMatchers("/v1/auth/**").permitAll()
+                    .requestMatchers("/v1/super-admin/**").hasAuthority(RoleName.ROLE_SUPER_ADMIN.toString())
                     .anyRequest().authenticated()
             }
 
