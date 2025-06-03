@@ -2,30 +2,34 @@ package com.coursy.clientauthservice.security
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-//    private val userDetailsService: UserDetailsServiceImp,
-//    private val jwtTokenFilter: JwtTokenFilter
+    private val userDetailsService: UserDetailsServiceImp,
+    private val jwtTokenFilter: JwtTokenFilter
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
     }
 
-    //
-//    @Bean
-//    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager {
-//        return authConfig.authenticationManager
-//    }
-//
+
+    @Bean
+    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager {
+        return authConfig.authenticationManager
+    }
+
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http.csrf { it.disable() }
@@ -40,19 +44,22 @@ class SecurityConfig(
 //                    .hasAnyAuthority(RoleName.ROLE_ADMIN.toString(), RoleName.ROLE_SUPER_ADMIN.toString())
 //                    .requestMatchers("/v1/super-admin/**").hasAuthority(RoleName.ROLE_SUPER_ADMIN.toString())
 //                    .anyRequest().authenticated()
-                    .anyRequest().permitAll()
+                    .requestMatchers(
+                        "/auth/**"
+                    ).permitAll()
+                    .anyRequest().authenticated()
             }
 
-//        http.authenticationProvider(authenticationProvider())
-//        http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter::class.java)
+        http.authenticationProvider(authenticationProvider())
+        http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
-//
-//    @Bean
-//    fun authenticationProvider(): DaoAuthenticationProvider {
-//        val authProvider = DaoAuthenticationProvider()
-//        authProvider.setUserDetailsService(userDetailsService)
-//        authProvider.setPasswordEncoder(passwordEncoder())
-//        return authProvider
-//    }
+
+    @Bean
+    fun authenticationProvider(): DaoAuthenticationProvider {
+        val authProvider = DaoAuthenticationProvider()
+        authProvider.setUserDetailsService(userDetailsService)
+        authProvider.setPasswordEncoder(passwordEncoder())
+        return authProvider
+    }
 }
