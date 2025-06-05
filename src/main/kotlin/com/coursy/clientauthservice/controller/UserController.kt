@@ -1,7 +1,10 @@
 package com.coursy.clientauthservice.controller
 
 import arrow.core.flatMap
+import arrow.core.left
 import com.coursy.clientauthservice.dto.RegistrationRequest
+import com.coursy.clientauthservice.failure.AuthorizationFailure
+import com.coursy.clientauthservice.model.RoleName
 import com.coursy.clientauthservice.security.UserDetailsImp
 import com.coursy.clientauthservice.service.UserService
 import org.springframework.http.HttpStatus
@@ -26,14 +29,22 @@ class UserController(
     }
 
     @PostMapping
-    fun createRegularUser(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
+    fun createUser(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
         val result = request
             .validate()
-            .flatMap { validated -> userService.createUser(validated) }
+            .flatMap { validated ->
+                if (isOperationPermitted(validated))
+                    userService.createUser(validated)
+                else
+                    AuthorizationFailure.InsufficientRole.left()
+            }
 
         return result.fold(
             { failure -> httpFailureResolver.handleFailure(failure) },
             { ResponseEntity.status(HttpStatus.CREATED).build() }
         )
     }
+
+    private fun isOperationPermitted(request: RegistrationRequest.Validated) =
+        request.roleName == RoleName.ROLE_STUDENT || request.roleName == RoleName.ROLE_TEACHER
 }

@@ -27,6 +27,9 @@ class HttpFailureResolver {
             is AuthHeaderFailure -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failure.message())
             is JwtFailure -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failure.message())
 
+            // Authorization
+            is AuthorizationFailure -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(failure.message())
+
             // User creation
             is UserFailure.EmailAlreadyExists -> ResponseEntity.status(HttpStatus.CONFLICT).body(failure.message())
             is UserFailure.LoginAlreadyExists -> ResponseEntity.status(HttpStatus.CONFLICT).body(failure.message())
