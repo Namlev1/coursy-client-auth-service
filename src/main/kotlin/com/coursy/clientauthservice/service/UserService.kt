@@ -3,6 +3,7 @@ package com.coursy.clientauthservice.service
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.coursy.clientauthservice.dto.ChangePasswordRequest
 import com.coursy.clientauthservice.dto.RegistrationRequest
 import com.coursy.clientauthservice.dto.UserResponse
 import com.coursy.clientauthservice.dto.toUserResponse
@@ -92,23 +93,19 @@ class UserService(
 //
 //        return userRepository.save(user).toUserResponse().right()
 //    }
-//
-//    fun updatePassword(
-//        userId: Long,
-//        request: ChangePasswordRequest.Validated,
-//        isRegularUser: Boolean = true
-//    ): Either<Failure, Unit> {
-//        val user = userRepository
-//            .findById(userId)
-//            .getOrElse { return UserFailure.IdNotExists.left() }
-//
-//        if (isOperationForbidden(isRegularUser, user))
-//            return AuthorizationFailure.InsufficientRole.left()
-//
-//        user.password = passwordEncoder.encode(request.password.value)
-//        userRepository.save(user)
-//        return Unit.right()
-//    }
+
+    fun updatePassword(
+        userId: Long,
+        request: ChangePasswordRequest.Validated
+    ): Either<Failure, Unit> {
+        val user = userRepository
+            .findById(userId)
+            .getOrElse { return UserFailure.IdNotExists.left() }
+
+        user.password = passwordEncoder.encode(request.password.value)
+        userRepository.save(user)
+        return Unit.right()
+    }
 
     private fun createUser(request: RegistrationRequest.Validated, role: Role): User {
         val encryptedPassword = passwordEncoder.encode(request.password.value)

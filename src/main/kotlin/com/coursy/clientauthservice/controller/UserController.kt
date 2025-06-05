@@ -2,6 +2,7 @@ package com.coursy.clientauthservice.controller
 
 import arrow.core.flatMap
 import arrow.core.left
+import com.coursy.clientauthservice.dto.ChangePasswordRequest
 import com.coursy.clientauthservice.dto.RegistrationRequest
 import com.coursy.clientauthservice.failure.AuthorizationFailure
 import com.coursy.clientauthservice.model.RoleName
@@ -26,6 +27,23 @@ class UserController(
                 { failure -> httpFailureResolver.handleFailure(failure) },
                 { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
             )
+    }
+
+    @PutMapping("/me/password")
+    fun updateCurrentUserPassword(
+        @AuthenticationPrincipal currentUser: UserDetailsImp,
+        @RequestBody request: ChangePasswordRequest
+    ): ResponseEntity<Any> {
+        val result = request
+            .validate()
+            .flatMap { validated ->
+                userService.updatePassword(currentUser.id, validated)
+            }
+
+        return result.fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { ResponseEntity.status(HttpStatus.OK).build() }
+        )
     }
 
     @PostMapping
