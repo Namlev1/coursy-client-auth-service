@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.coursy.clientauthservice.dto.RegistrationRequest
+import com.coursy.clientauthservice.dto.UserResponse
+import com.coursy.clientauthservice.dto.toUserResponse
 import com.coursy.clientauthservice.failure.Failure
 import com.coursy.clientauthservice.failure.RoleFailure
 import com.coursy.clientauthservice.failure.UserFailure
@@ -53,13 +55,13 @@ class UserService(
 //        userRepository.removeUserById(id)
 //        return Unit.right()
 //    }
-//
-//    fun getUser(id: Long): Either<Failure, UserResponse> {
-//        return userRepository.findById(id)
-//            .map { it.toUserResponse().right() }
-//            .getOrElse { UserFailure.IdNotExists.left() }
-//    }
-//
+
+    fun getUser(id: Long): Either<Failure, UserResponse> {
+        return userRepository.findById(id)
+            .map { it.toUserResponse().right() }
+            .getOrElse { UserFailure.IdNotExists.left() }
+    }
+
 //    fun getUserPage(pageRequest: PageRequest) =
 //        userRepository.findAll(pageRequest)
 //            .map { it.toUserResponse() }
