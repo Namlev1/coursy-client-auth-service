@@ -29,6 +29,10 @@ class UserService(
             return UserFailure.EmailAlreadyExists.left()
         }
 
+        if (userRepository.existsByLogin(request.login)) {
+            return UserFailure.LoginAlreadyExists.left()
+        }
+
         val role = roleRepository.findByName(request.roleName)
             .getOrElse { return RoleFailure.NotFound.left() }
 

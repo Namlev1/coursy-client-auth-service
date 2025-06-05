@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class UserController(
     private val userService: UserService,
+    private val httpFailureResolver: HttpFailureResolver
 ) {
 
     @PostMapping
@@ -23,7 +24,7 @@ class UserController(
             .flatMap { validated -> userService.createUser(validated) }
 
         return result.fold(
-            { failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build() },
+            { failure -> httpFailureResolver.handleFailure(failure) },
             { ResponseEntity.status(HttpStatus.CREATED).build() }
         )
     }

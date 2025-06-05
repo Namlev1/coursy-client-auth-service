@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/auth")
 class AuthController(
     private val authService: AuthService,
-//    private val httpFailureResolver: HttpFailureResolver
+    private val httpFailureResolver: HttpFailureResolver
 ) {
     @PostMapping("/login")
     fun authenticateUser(@RequestBody request: LoginRequest): ResponseEntity<Any> {
         val result = request.validate().flatMap { validated -> authService.authenticateUser(validated) }
 
         return result.fold(
-            { failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message()) },
+            { failure -> httpFailureResolver.handleFailure(failure) },
             { jwtResponse -> ResponseEntity.status(HttpStatus.OK).body(jwtResponse) }
         )
     }
@@ -29,7 +29,7 @@ class AuthController(
         val result = request.validate().flatMap { validated -> authService.refreshJwtToken(validated) }
 
         return result.fold(
-            { failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message()) },
+            { failure -> httpFailureResolver.handleFailure(failure) },
             { jwtResponse -> ResponseEntity.status(HttpStatus.OK).body(jwtResponse) }
         )
     }
