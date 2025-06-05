@@ -107,8 +107,7 @@ class UserService(
     private fun createUser(request: RegistrationRequest.Validated, role: Role): User {
         val encryptedPassword = passwordEncoder.encode(request.password.value)
         return User(
-            firstName = request.firstName,
-            lastName = request.lastName,
+            login = request.login,
             email = request.email,
             password = encryptedPassword,
             role = role

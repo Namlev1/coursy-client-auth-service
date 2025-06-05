@@ -7,27 +7,24 @@ import com.coursy.clientauthservice.failure.Failure
 import com.coursy.clientauthservice.failure.RoleFailure
 import com.coursy.clientauthservice.model.RoleName
 import com.coursy.clientauthservice.types.Email
-import com.coursy.clientauthservice.types.Name
+import com.coursy.clientauthservice.types.Login
 import com.coursy.clientauthservice.types.Password
 
 data class RegistrationRequest(
-    val firstName: String,
-    val lastName: String,
+    val login: String,
     val email: String,
     val password: String,
     val roleName: String?
 ) : SelfValidating<Failure, RegistrationRequest.Validated> {
     data class Validated(
-        val firstName: Name,
-        val lastName: Name,
+        val login: Login,
         val email: Email,
         val password: Password,
         val roleName: RoleName
     )
 
     override fun validate(): Either<Failure, Validated> {
-        val firstNameResult = Name.create(firstName)
-        val lastNameResult = Name.create(lastName)
+        val loginResult = Login.create(this@RegistrationRequest.login)
         val emailResult = Email.create(email)
         val passwordResult = Password.create(password)
         val roleNameResult = roleName?.let {
@@ -36,16 +33,14 @@ data class RegistrationRequest(
         } ?: RoleFailure.IsNull.left()
 
         val firstError = listOfNotNull(
-            firstNameResult.leftOrNull(),
-            lastNameResult.leftOrNull(),
+            loginResult.leftOrNull(),
             emailResult.leftOrNull(),
             passwordResult.leftOrNull(),
             roleNameResult.leftOrNull()
         ).firstOrNull()
 
         return firstError?.left() ?: Validated(
-            firstName = firstNameResult.getOrNull()!!,
-            lastName = lastNameResult.getOrNull()!!,
+            login = loginResult.getOrNull()!!,
             email = emailResult.getOrNull()!!,
             password = passwordResult.getOrNull()!!,
             roleName = roleNameResult.getOrNull()!!

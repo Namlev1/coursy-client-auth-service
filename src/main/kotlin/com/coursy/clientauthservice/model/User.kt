@@ -1,7 +1,7 @@
 package com.coursy.clientauthservice.model
 
 import com.coursy.clientauthservice.types.Email
-import com.coursy.clientauthservice.types.Name
+import com.coursy.clientauthservice.types.Login
 import jakarta.persistence.*
 import org.hibernate.Hibernate
 import java.time.Instant
@@ -11,8 +11,8 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-    var firstName: Name,
-    var lastName: Name,
+    @Column(unique = true)
+    var login: Login,
     @Column(unique = true)
     var email: Email,
     var password: String,

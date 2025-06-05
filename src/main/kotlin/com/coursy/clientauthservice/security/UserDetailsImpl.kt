@@ -2,7 +2,7 @@ package com.coursy.clientauthservice.security
 
 import com.coursy.clientauthservice.model.User
 import com.coursy.clientauthservice.types.Email
-import com.coursy.clientauthservice.types.Name
+import com.coursy.clientauthservice.types.Login
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
@@ -12,8 +12,7 @@ class UserDetailsImp(
     val email: Email,
     private val authorities: MutableCollection<SimpleGrantedAuthority>,
     private val password: String,
-    val firstName: Name,
-    val lastName: Name,
+    private val login: Login,
     private val enabled: Boolean,
     private val accountNonLocked: Boolean
 ) : UserDetails {
@@ -40,8 +39,7 @@ fun User.toUserDetails(): UserDetailsImp {
         id = this.id,
         email = this.email,
         password = password,
-        firstName = this.firstName,
-        lastName = this.lastName,
+        login = this.login,
         authorities = authorities,
         enabled = this.enabled,
         accountNonLocked = this.accountNonLocked
