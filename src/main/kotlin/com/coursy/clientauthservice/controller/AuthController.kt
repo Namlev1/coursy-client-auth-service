@@ -57,6 +57,18 @@ class AuthController(
         )
     }
 
+    @PostMapping("/register/admin")
+    fun createAdmin(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
+        val result = request
+            .copy(roleName = RoleName.ROLE_ADMIN.toString())
+            .validate()
+
+        return result.fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { ResponseEntity.status(HttpStatus.CREATED).build() }
+        )
+    }
+
     private fun isRegistrationRolePermitted(request: RegistrationRequest.Validated) =
         request.roleName == RoleName.ROLE_STUDENT || request.roleName == RoleName.ROLE_TEACHER
 }
