@@ -1,4 +1,4 @@
-package com.coursy.clientauthservice.integration
+package com.coursy.clientauthservice.integration.userController
 
 import io.kotest.core.spec.style.BehaviorSpec
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -13,7 +13,8 @@ import org.springframework.test.web.servlet.get
 class UserControllerAuthenticationTest(
     private val mockMvc: MockMvc
 ) : BehaviorSpec() {
-    val url = "/v1/users"
+    val fixtures = UserTestFixtures()
+    val url = fixtures.userUrl
 
     init {
         given("user is not authenticated") {
