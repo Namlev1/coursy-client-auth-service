@@ -3,10 +3,7 @@ package com.coursy.clientauthservice.service
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.coursy.clientauthservice.dto.ChangePasswordRequest
-import com.coursy.clientauthservice.dto.RegistrationRequest
-import com.coursy.clientauthservice.dto.UserResponse
-import com.coursy.clientauthservice.dto.toUserResponse
+import com.coursy.clientauthservice.dto.*
 import com.coursy.clientauthservice.failure.Failure
 import com.coursy.clientauthservice.failure.RoleFailure
 import com.coursy.clientauthservice.failure.UserFailure
@@ -66,31 +63,23 @@ class UserService(
             .map { it.toUserResponse() }
             .let { pagedResourcesAssembler.toModel(it) }
 
-//    fun updateUser(
-//        userId: Long,
-//        request: UserUpdateRequest.Validated,
-//        isRegularUser: Boolean = true
-//    ): Either<Failure, UserResponse> {
-//        val user = userRepository
-//            .findById(userId)
-//            .getOrElse { return UserFailure.IdNotExists.left() }
-//
-//        if (request.roleName != null) {
-//            // only super_admins can change roles
-//            if (isRegularUser)
-//                return AuthorizationFailure.InsufficientRole.left()
-//
-//            val role = roleRepository.findByName(request.roleName)
-//                ?: return RoleFailure.NotFound.left()
-//            user.role = role
-//        }
-//
-//        request.firstName?.let { user.firstName = it }
-//        request.lastName?.let { user.lastName = it }
-//        request.companyName?.let { user.companyName = it }
-//
-//        return userRepository.save(user).toUserResponse().right()
-//    }
+    fun updateUserRole(
+        userId: Long,
+        request: RoleUpdateRequest.Validated,
+    ): Either<Failure, UserResponse> {
+        val user = userRepository
+            .findById(userId)
+            .getOrElse { return UserFailure.IdNotExists.left() }
+
+        val role = roleRepository
+            .findByName(request.roleName)
+            .getOrElse { return RoleFailure.NotFound.left() }
+       
+        user.role = role
+        return userRepository
+            .save(user)
+            .toUserResponse().right()
+    }
 
     fun updatePassword(
         userId: Long,
@@ -114,8 +103,5 @@ class UserService(
             role = role
         )
     }
-
-//    private fun isOperationForbidden(isRegularUser: Boolean, user: User) =
-//        isRegularUser && user.role.name != RoleName.ROLE_USER
 
 }

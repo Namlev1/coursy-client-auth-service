@@ -14,7 +14,7 @@ data class RegistrationRequest(
     val login: String,
     val email: String,
     val password: String,
-    val roleName: String?
+    val roleName: String
 ) : SelfValidating<Failure, RegistrationRequest.Validated> {
     data class Validated(
         val login: Login,
@@ -27,10 +27,9 @@ data class RegistrationRequest(
         val loginResult = Login.create(this@RegistrationRequest.login)
         val emailResult = Email.create(email)
         val passwordResult = Password.create(password)
-        val roleNameResult = roleName?.let {
-            Either.catch { RoleName.valueOf(it) }
-                .mapLeft { RoleFailure.NotFound }
-        } ?: RoleFailure.IsNull.left()
+        val roleNameResult = RoleName.entries
+            .find { it.name.equals(roleName, ignoreCase = true) }?.right()
+            ?: RoleFailure.NotFound.left()
 
         val firstError = listOfNotNull(
             loginResult.leftOrNull(),

@@ -2,6 +2,7 @@ package com.coursy.clientauthservice.controller
 
 import arrow.core.flatMap
 import com.coursy.clientauthservice.dto.ChangePasswordRequest
+import com.coursy.clientauthservice.dto.RoleUpdateRequest
 import com.coursy.clientauthservice.security.UserDetailsImp
 import com.coursy.clientauthservice.service.UserService
 import org.springframework.data.domain.PageRequest
@@ -63,8 +64,24 @@ class UserController(
             { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
         )
 
+    // todo: admin can't grand super-admins
     @PutMapping("/{id}")
-    fun updateUser(@PathVariable id: Long): Nothing = TODO()
+    fun updateUserRole(
+        @PathVariable id: Long,
+        @RequestBody request: RoleUpdateRequest
+    ): ResponseEntity<Any> {
+        val result = request
+            .validate()
+            .flatMap { validated ->
+                userService.updateUserRole(id, validated)
+            }
+
+        return result.fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
+        )
+    }
+
 
     @DeleteMapping("/{id}")
     fun deleteUser(@PathVariable id: Long) = userService

@@ -15,7 +15,6 @@ class HttpFailureResolver {
             is PasswordFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
             is LoginTypeFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
             is RoleFailure.NotFound -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(failure.message())
-            is RoleFailure.IsNull -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
 
             // Refresh Token
             is RefreshTokenFailure.Empty -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
