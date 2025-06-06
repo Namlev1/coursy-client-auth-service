@@ -1,11 +1,11 @@
 package com.coursy.clientauthservice.security
 
-import com.coursy.clientauthservice.model.RoleName
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 class SecurityConfig(
     private val userDetailsService: UserDetailsServiceImp,
     private val jwtTokenFilter: JwtTokenFilter
@@ -37,25 +38,8 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it
-//                    .requestMatchers(
-//                        "/v1/auth/**",
-//                        "/v1/user"
-//                    ).permitAll()
-//                    .requestMatchers("/v1/admin/**")
-//                    .hasAnyAuthority(RoleName.ROLE_ADMIN.toString(), RoleName.ROLE_SUPER_ADMIN.toString())
-//                    .requestMatchers("/v1/super-admin/**").hasAuthority(RoleName.ROLE_SUPER_ADMIN.toString())
-//                    .anyRequest().authenticated()
                     .requestMatchers("/v1/auth/**")
                     .permitAll()
-
-                    .requestMatchers("/v1/admin/**")
-                    .hasAnyAuthority(RoleName.ROLE_ADMIN.toString(), RoleName.ROLE_SUPER_ADMIN.toString())
-
-                    .requestMatchers("/v1/user") // Only for PUT /v1/user
-                    .permitAll()
-
-                    .requestMatchers("/v1/super-admin/**")
-                    .hasAuthority(RoleName.ROLE_SUPER_ADMIN.toString())
 
                     .anyRequest()
                     .authenticated()
