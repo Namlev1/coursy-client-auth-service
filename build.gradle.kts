@@ -31,6 +31,7 @@ dependencies {
 
     // DB
     runtimeOnly("org.postgresql:postgresql")
+    testImplementation("com.h2database:h2:2.3.232")
 
     // Authentication
     implementation("com.auth0:java-jwt:4.5.0")
