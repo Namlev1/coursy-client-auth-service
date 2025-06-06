@@ -3,11 +3,13 @@ package com.coursy.clientauthservice.controller
 import arrow.core.flatMap
 import com.coursy.clientauthservice.dto.ChangePasswordRequest
 import com.coursy.clientauthservice.dto.RoleUpdateRequest
+import com.coursy.clientauthservice.model.RoleName
 import com.coursy.clientauthservice.security.UserDetailsImp
 import com.coursy.clientauthservice.service.UserService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -44,6 +46,7 @@ class UserController(
         )
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @GetMapping
     fun getUserList(
         @RequestParam(defaultValue = "0") page: Int,
@@ -56,6 +59,7 @@ class UserController(
                 .let { ResponseEntity.ok(it) }
         }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @GetMapping("/{id}")
     fun getUser(@PathVariable id: Long) = userService
         .getUser(id)
@@ -64,16 +68,18 @@ class UserController(
             { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
         )
 
-    // todo: admin can't grand super-admins
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @PutMapping("/{id}")
     fun updateUserRole(
         @PathVariable id: Long,
-        @RequestBody request: RoleUpdateRequest
+        @RequestBody request: RoleUpdateRequest,
+        @AuthenticationPrincipal principal: UserDetailsImp
     ): ResponseEntity<Any> {
+        val principalRole = RoleName.valueOf(principal.authorities.first().authority)
         val result = request
             .validate()
             .flatMap { validated ->
-                userService.updateUserRole(id, validated)
+                userService.updateUserRole(id, validated, principalRole)
             }
 
         return result.fold(
@@ -83,6 +89,7 @@ class UserController(
     }
 
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/{id}")
     fun deleteUser(@PathVariable id: Long) = userService
         .removeUser(id = id)

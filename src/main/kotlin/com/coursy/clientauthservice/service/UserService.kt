@@ -4,10 +4,12 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.coursy.clientauthservice.dto.*
+import com.coursy.clientauthservice.failure.AuthorizationFailure
 import com.coursy.clientauthservice.failure.Failure
 import com.coursy.clientauthservice.failure.RoleFailure
 import com.coursy.clientauthservice.failure.UserFailure
 import com.coursy.clientauthservice.model.Role
+import com.coursy.clientauthservice.model.RoleName
 import com.coursy.clientauthservice.model.User
 import com.coursy.clientauthservice.repository.RoleRepository
 import com.coursy.clientauthservice.repository.UserRepository
@@ -66,15 +68,20 @@ class UserService(
     fun updateUserRole(
         userId: Long,
         request: RoleUpdateRequest.Validated,
+        principalRole: RoleName
     ): Either<Failure, UserResponse> {
         val user = userRepository
             .findById(userId)
             .getOrElse { return UserFailure.IdNotExists.left() }
 
+        if (!canUpdateUserRole(principalRole, request.roleName, user)) {
+            return AuthorizationFailure.InsufficientRole.left()
+        }
+
         val role = roleRepository
             .findByName(request.roleName)
             .getOrElse { return RoleFailure.NotFound.left() }
-       
+
         user.role = role
         return userRepository
             .save(user)
@@ -104,4 +111,25 @@ class UserService(
         )
     }
 
+    private fun canUpdateUserRole(
+        principalRole: RoleName,
+        newRole: RoleName,
+        updatedUser: User
+    ): Boolean {
+        if (principalRole == RoleName.ROLE_ADMIN) {
+            // Admin tries to assign SUPER_ADMIN
+            if (newRole == RoleName.ROLE_SUPER_ADMIN) {
+                return false
+            }
+
+            // Admin tries to change another ADMIN or SUPER_ADMIN
+            if (updatedUser.role.name == RoleName.ROLE_SUPER_ADMIN) {
+                return false
+            }
+            if (updatedUser.role.name == RoleName.ROLE_ADMIN) {
+                return false
+            }
+        }
+        return true
+    }
 }
