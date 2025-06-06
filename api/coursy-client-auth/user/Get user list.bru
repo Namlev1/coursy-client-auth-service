@@ -1,0 +1,16 @@
+meta {
+  name: Get user list
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{url}}/users?size=10&page=0
+  body: none
+  auth: inherit
+}
+
+params:query {
+  size: 10
+  page: 0
+}

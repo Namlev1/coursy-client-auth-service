@@ -1,0 +1,24 @@
+meta {
+  name: Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/user
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGVtYWlsLmNvbSIsInJvbGVzIjpbIlJPTEVfU1RVREVOVCJdLCJpYXQiOjE3NDg5NDc3MzQsImV4cCI6MTc0ODk1MTMzNH0.tBxcZ2j3HDpGcFB94CyNQasNcJPSUNzWnY-e1u5pb3c
+}
+
+body:json {
+  {
+    "login": "hello worlda",
+    "email": "test5@email.com",
+    "password": "pa$$w0RD",
+    "roleName": "ROLE_TEACHER"
+  }
+}
