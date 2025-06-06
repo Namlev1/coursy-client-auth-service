@@ -4,6 +4,7 @@ import arrow.core.flatMap
 import com.coursy.clientauthservice.dto.ChangePasswordRequest
 import com.coursy.clientauthservice.security.UserDetailsImp
 import com.coursy.clientauthservice.service.UserService
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -42,16 +43,37 @@ class UserController(
         )
     }
 
-    @GetMapping("/")
-    fun getUserList(): Nothing = TODO()
-
+    @GetMapping
+    fun getUserList(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+    ): ResponseEntity<Any> =
+        when {
+            arePageParamsInvalid(page, size) -> ResponseEntity.badRequest().build()
+            else -> PageRequest.of(page, size)
+                .let { userService.getUserPage(it) }
+                .let { ResponseEntity.ok(it) }
+        }
 
     @GetMapping("/{id}")
-    fun getUser(@PathVariable id: Long): Nothing = TODO()
+    fun getUser(@PathVariable id: Long) = userService
+        .getUser(id)
+        .fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
+        )
 
     @PutMapping("/{id}")
     fun updateUser(@PathVariable id: Long): Nothing = TODO()
 
     @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable id: Long): Nothing = TODO()
+    fun deleteUser(@PathVariable id: Long) = userService
+        .removeUser(id = id)
+        .fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { ResponseEntity.status(HttpStatus.NO_CONTENT).build() }
+        )
+
+    private fun arePageParamsInvalid(page: Int, size: Int) =
+        page < 0 || size <= 0
 }

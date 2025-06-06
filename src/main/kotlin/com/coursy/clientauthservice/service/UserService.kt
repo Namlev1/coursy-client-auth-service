@@ -15,6 +15,8 @@ import com.coursy.clientauthservice.model.User
 import com.coursy.clientauthservice.repository.RoleRepository
 import com.coursy.clientauthservice.repository.UserRepository
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import kotlin.jvm.optionals.getOrElse
@@ -25,7 +27,7 @@ class UserService(
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
     private val passwordEncoder: PasswordEncoder,
-//    private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
+    private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
 ) {
     fun createUser(request: RegistrationRequest.Validated): Either<Failure, Unit> {
         if (userRepository.existsByEmail(request.email)) {
@@ -44,18 +46,14 @@ class UserService(
         return Unit.right()
     }
 
-//    fun removeUser(id: Long, isRegularUser: Boolean): Either<Failure, Unit> {
-//        userRepository
-//            .findById(id)
-//            .getOrElse { return UserFailure.IdNotExists.left() }
-//            .let {
-//                if (isOperationForbidden(isRegularUser, it))
-//                    return AuthorizationFailure.InsufficientRole.left()
-//            }
-//
-//        userRepository.removeUserById(id)
-//        return Unit.right()
-//    }
+    fun removeUser(id: Long): Either<Failure, Unit> {
+        userRepository
+            .findById(id)
+            .getOrElse { return UserFailure.IdNotExists.left() }
+
+        userRepository.removeUserById(id)
+        return Unit.right()
+    }
 
     fun getUser(id: Long): Either<Failure, UserResponse> {
         return userRepository.findById(id)
@@ -63,11 +61,11 @@ class UserService(
             .getOrElse { UserFailure.IdNotExists.left() }
     }
 
-//    fun getUserPage(pageRequest: PageRequest) =
-//        userRepository.findAll(pageRequest)
-//            .map { it.toUserResponse() }
-//            .let { pagedResourcesAssembler.toModel(it) }
-//
+    fun getUserPage(pageRequest: PageRequest) =
+        userRepository.findAll(pageRequest)
+            .map { it.toUserResponse() }
+            .let { pagedResourcesAssembler.toModel(it) }
+
 //    fun updateUser(
 //        userId: Long,
 //        request: UserUpdateRequest.Validated,
