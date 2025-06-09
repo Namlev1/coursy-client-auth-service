@@ -45,10 +45,17 @@ class UserService(
         return Unit.right()
     }
 
-    fun removeUser(id: Long): Either<Failure, Unit> {
-        userRepository
+    fun removeUser(
+        id: Long,
+        principalRole: RoleName
+    ): Either<Failure, Unit> {
+        val user = userRepository
             .findById(id)
             .getOrElse { return UserFailure.IdNotExists.left() }
+
+        if (!canDeleteUser(principalRole, user)) {
+            return AuthorizationFailure.InsufficientRole.left()
+        }
 
         userRepository.removeUserById(id)
         return Unit.right()
@@ -127,6 +134,24 @@ class UserService(
                 return false
             }
             if (updatedUser.role.name == RoleName.ROLE_ADMIN) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun canDeleteUser(
+        principalRole: RoleName,
+        user: User
+    ): Boolean {
+        if (principalRole == RoleName.ROLE_ADMIN) {
+            // Admin tries to delete SUPER_ADMIN
+            if (user.role.name == RoleName.ROLE_SUPER_ADMIN) {
+                return false
+            }
+
+            // Admin tries to delete another ADMIN
+            if (user.role.name == RoleName.ROLE_ADMIN) {
                 return false
             }
         }

@@ -75,7 +75,7 @@ class UserController(
         @RequestBody request: RoleUpdateRequest,
         @AuthenticationPrincipal principal: UserDetailsImp
     ): ResponseEntity<Any> {
-        val principalRole = RoleName.valueOf(principal.authorities.first().authority)
+        val principalRole = extractPrincipalRole(principal)
         val result = request
             .validate()
             .flatMap { validated ->
@@ -89,15 +89,25 @@ class UserController(
     }
 
 
-    // TODO: admin shouldn't delete other admins
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable id: Long) = userService
-        .removeUser(id = id)
-        .fold(
-            { failure -> httpFailureResolver.handleFailure(failure) },
-            { ResponseEntity.status(HttpStatus.NO_CONTENT).build() }
-        )
+    fun deleteUser(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal principal: UserDetailsImp
+    ): ResponseEntity<Any> {
+        val principalRole = extractPrincipalRole(principal)
+
+        return userService.removeUser(id, principalRole)
+            .fold(
+                { failure -> httpFailureResolver.handleFailure(failure) },
+                { ResponseEntity.status(HttpStatus.NO_CONTENT).build() }
+            )
+    }
+
+    private fun extractPrincipalRole(principal: UserDetailsImp): RoleName {
+        val principalRole = RoleName.valueOf(principal.authorities.first().authority)
+        return principalRole
+    }
 
     private fun arePageParamsInvalid(page: Int, size: Int) =
         page < 0 || size <= 0
