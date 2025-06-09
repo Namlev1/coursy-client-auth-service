@@ -7,6 +7,7 @@ import com.coursy.clientauthservice.repository.UserRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.optional.shouldBeEmpty
+import io.kotest.matchers.shouldBe
 import jakarta.transaction.Transactional
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.*
+import kotlin.jvm.optionals.getOrElse
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -62,7 +64,7 @@ class UserControllerCrudTest(
                     val userId = registerUser()
 
                     val result = mockMvc.delete("$url/$userId") {
-                        with(user("testuser").roles("ADMIN"))
+                        with(user(fixtures.adminDetails))
                     }
 
                     result.andExpect {
@@ -74,7 +76,7 @@ class UserControllerCrudTest(
                     val userId = registerUser()
 
                     mockMvc.delete("$url/$userId") {
-                        with(user("testuser").roles("ADMIN"))
+                        with(user(fixtures.adminDetails))
                     }
 
                     userRepository.findById(userId).shouldBeEmpty()
@@ -129,6 +131,41 @@ class UserControllerCrudTest(
                             result.andExpect {
                                 jsonPath("$") { value(AuthorizationFailure.InsufficientRole.message()) }
                             }
+                        }
+                    }
+                }
+
+                `when`("SUPER_ADMIN attempts to change user role") {
+                    and("tries to promote to SUPER_ADMIN") {
+                        then("should return 200") {
+                            val userId = registerUser()
+
+                            val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
+                            val result = mockMvc.put("$url/$userId") {
+                                content = mapper.writeValueAsString(request)
+                                contentType = MediaType.APPLICATION_JSON
+                                with(user(fixtures.superAdmirDetails))
+                            }
+
+                            result.andExpect {
+                                status { isOk() }
+                            }
+                        }
+
+                        then("user should be SUPER_ADMIN") {
+                            val userId = registerUser()
+
+                            val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
+                            val result = mockMvc.put("$url/$userId") {
+                                content = mapper.writeValueAsString(request)
+                                contentType = MediaType.APPLICATION_JSON
+                                with(user(fixtures.superAdmirDetails))
+                            }
+
+                            val user = userRepository.findById(userId).getOrElse {
+                                throw IllegalStateException("User not found after role update")
+                            }
+                            user.role.name shouldBe RoleName.ROLE_SUPER_ADMIN
                         }
                     }
                 }

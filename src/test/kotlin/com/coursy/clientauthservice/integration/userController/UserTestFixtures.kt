@@ -30,4 +30,14 @@ class UserTestFixtures {
         enabled = true,
         accountNonLocked = true
     )
+
+    val superAdmirDetails = UserDetailsImp(
+        id = 1L,
+        email = Email.create("testuser@example.com").getOrNull()!!,
+        authorities = mutableSetOf(SimpleGrantedAuthority("ROLE_SUPER_ADMIN")),
+        password = "password",
+        login = Login.create("testuser").getOrNull()!!,
+        enabled = true,
+        accountNonLocked = true
+    )
 }
