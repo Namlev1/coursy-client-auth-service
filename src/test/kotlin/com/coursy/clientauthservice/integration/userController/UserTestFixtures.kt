@@ -21,6 +21,16 @@ class UserTestFixtures {
         registrationRole
     )
 
+    val studentDetails = UserDetailsImp(
+        id = 1L,
+        email = Email.create("testuser@example.com").getOrNull()!!,
+        authorities = mutableSetOf(SimpleGrantedAuthority("ROLE_STUNENT")),
+        password = "password",
+        login = Login.create("testuser").getOrNull()!!,
+        enabled = true,
+        accountNonLocked = true
+    )
+
     val adminDetails = UserDetailsImp(
         id = 1L,
         email = Email.create("testuser@example.com").getOrNull()!!,
