@@ -89,6 +89,7 @@ class UserController(
     }
 
 
+    // TODO: admin shouldn't delete other admins
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/{id}")
     fun deleteUser(@PathVariable id: Long) = userService
