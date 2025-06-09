@@ -2,6 +2,7 @@ package com.coursy.clientauthservice.integration.userController
 
 import com.coursy.clientauthservice.dto.RoleUpdateRequest
 import com.coursy.clientauthservice.failure.AuthorizationFailure
+import com.coursy.clientauthservice.failure.UserFailure
 import com.coursy.clientauthservice.model.RoleName
 import com.coursy.clientauthservice.repository.UserRepository
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -15,7 +16,6 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.*
-import kotlin.jvm.optionals.getOrElse
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -55,6 +55,32 @@ class UserControllerCrudTest(
 
                     result.andExpect {
                         jsonPath("$.email") { value(fixtures.registrationEmail) }
+                    }
+                }
+            }
+
+            `when`("retrieving user list") {
+                then("should return 200") {
+                    registerUser()
+
+                    val result = mockMvc.get(url) {
+                        with(user("testuser").roles("ADMIN"))
+                    }
+
+                    result.andExpect {
+                        status { isOk() }
+                    }
+                }
+
+                then("should return one element list") {
+                    registerUser()
+
+                    val result = mockMvc.get(url) {
+                        with(user("testuser").roles("ADMIN"))
+                    }
+
+                    result.andExpect {
+                        jsonPath("$.page.totalElements") { value("1") }
                     }
                 }
             }
@@ -103,7 +129,8 @@ class UserControllerCrudTest(
                     }
 
                     and("tries to promote to SUPER_ADMIN") {
-                        then("should return 403") {
+
+                        fun test(): ResultActionsDsl {
                             val userId = registerUser()
 
                             val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
@@ -112,6 +139,11 @@ class UserControllerCrudTest(
                                 contentType = MediaType.APPLICATION_JSON
                                 with(user(fixtures.adminDetails))
                             }
+                            return result
+                        }
+
+                        then("should return 403") {
+                            val result = test()
 
                             result.andExpect {
                                 status { isForbidden() }
@@ -119,14 +151,7 @@ class UserControllerCrudTest(
                         }
 
                         then("should return AuthorizationFailure") {
-                            val userId = registerUser()
-
-                            val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
-                            val result = mockMvc.put("$url/$userId") {
-                                content = mapper.writeValueAsString(request)
-                                contentType = MediaType.APPLICATION_JSON
-                                with(user(fixtures.adminDetails))
-                            }
+                            val result = test()
 
                             result.andExpect {
                                 jsonPath("$") { value(AuthorizationFailure.InsufficientRole.message()) }
@@ -136,8 +161,10 @@ class UserControllerCrudTest(
                 }
 
                 `when`("SUPER_ADMIN attempts to change user role") {
+
                     and("tries to promote to SUPER_ADMIN") {
-                        then("should return 200") {
+
+                        fun test(): ResultActionsDsl {
                             val userId = registerUser()
 
                             val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
@@ -146,6 +173,11 @@ class UserControllerCrudTest(
                                 contentType = MediaType.APPLICATION_JSON
                                 with(user(fixtures.superAdmirDetails))
                             }
+                            return result
+                        }
+
+                        then("should return 200") {
+                            val result = test()
 
                             result.andExpect {
                                 status { isOk() }
@@ -153,20 +185,62 @@ class UserControllerCrudTest(
                         }
 
                         then("user should be SUPER_ADMIN") {
-                            val userId = registerUser()
+                            test()
 
-                            val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
-                            val result = mockMvc.put("$url/$userId") {
-                                content = mapper.writeValueAsString(request)
-                                contentType = MediaType.APPLICATION_JSON
-                                with(user(fixtures.superAdmirDetails))
-                            }
-
-                            val user = userRepository.findById(userId).getOrElse {
-                                throw IllegalStateException("User not found after role update")
-                            }
+                            val user = userRepository.findByEmail(fixtures.registrationEmail)
+                                ?: throw IllegalStateException("User not found after role update")
                             user.role.name shouldBe RoleName.ROLE_SUPER_ADMIN
                         }
+                    }
+                }
+            }
+        }
+
+        given("user not in database") {
+            `when`("retrieving user data") {
+                then("should return 404 with IdNotExists") {
+                    val nonExistentUserId = 999999L
+
+                    val result = mockMvc.get("$url/$nonExistentUserId") {
+                        with(user("testuser").roles("ADMIN"))
+                    }
+
+                    result.andExpect {
+                        status { isNotFound() }
+                        jsonPath("$") { value(UserFailure.IdNotExists.message()) }
+                    }
+                }
+            }
+
+            `when`("removing the user") {
+                then("should return 404 with IdNotExists") {
+                    val nonExistentUserId = 999999L
+
+                    val result = mockMvc.delete("$url/$nonExistentUserId") {
+                        with(user(fixtures.adminDetails))
+                    }
+
+                    result.andExpect {
+                        status { isNotFound() }
+                        jsonPath("$") { value(UserFailure.IdNotExists.message()) }
+                    }
+                }
+            }
+
+            `when`("SUPER_ADMIN attempts to change non-existent user role") {
+                then("should return 404 with IdNotExists") {
+                    val nonExistentUserId = 999999L
+
+                    val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
+                    val result = mockMvc.put("$url/$nonExistentUserId") {
+                        content = mapper.writeValueAsString(request)
+                        contentType = MediaType.APPLICATION_JSON
+                        with(user(fixtures.superAdmirDetails))
+                    }
+
+                    result.andExpect {
+                        status { isNotFound() }
+                        jsonPath("$") { value(UserFailure.IdNotExists.message()) }
                     }
                 }
             }
