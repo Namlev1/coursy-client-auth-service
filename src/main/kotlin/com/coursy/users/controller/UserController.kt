@@ -1,7 +1,10 @@
 package com.coursy.users.controller
 
 import arrow.core.flatMap
+import arrow.core.left
+import com.coursy.users.dto.RegistrationRequest
 import com.coursy.users.dto.RoleUpdateRequest
+import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.model.RoleName
 import com.coursy.users.security.UserDetailsImp
 import com.coursy.users.service.UserService
@@ -18,6 +21,38 @@ class UserController(
     private val userService: UserService,
     private val httpFailureResolver: HttpFailureResolver
 ) {
+
+    @PostMapping("/register")
+    fun createUser(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
+        val result = request
+            .validate()
+            .flatMap { validated ->
+                if (isRegistrationRolePermitted(validated))
+                    userService.createUser(validated)
+                else
+                    AuthorizationFailure.InsufficientRole.left()
+            }
+
+        return result.fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { ResponseEntity.status(HttpStatus.CREATED).build() }
+        )
+    }
+
+    @PostMapping("/register/admin")
+    fun createAdmin(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
+        val result = request
+            .copy(roleName = RoleName.ROLE_ADMIN.toString())
+            .validate()
+
+        return result.fold(
+            { failure -> httpFailureResolver.handleFailure(failure) },
+            { ResponseEntity.status(HttpStatus.CREATED).build() }
+        )
+    }
+
+    private fun isRegistrationRolePermitted(request: RegistrationRequest.Validated) =
+        request.roleName == RoleName.ROLE_STUDENT || request.roleName == RoleName.ROLE_TEACHER
     @GetMapping("/me")
     fun getCurrentUser(@AuthenticationPrincipal currentUser: UserDetailsImp): ResponseEntity<Any> {
         return userService

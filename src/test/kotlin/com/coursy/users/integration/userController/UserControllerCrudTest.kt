@@ -250,7 +250,7 @@ class UserControllerCrudTest(
     private fun registerUser(): Long {
         val registrationRequest = fixtures.registrationRequest
         mockMvc
-            .post("$authUrl/register") {
+            .post("$url/register") {
                 content = mapper.writeValueAsString(registrationRequest)
                 contentType = MediaType.APPLICATION_JSON
             }
