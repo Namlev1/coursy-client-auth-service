@@ -1,7 +1,6 @@
 package com.coursy.users.controller
 
 import arrow.core.flatMap
-import com.coursy.users.dto.ChangePasswordRequest
 import com.coursy.users.dto.RoleUpdateRequest
 import com.coursy.users.model.RoleName
 import com.coursy.users.security.UserDetailsImp
@@ -27,23 +26,6 @@ class UserController(
                 { failure -> httpFailureResolver.handleFailure(failure) },
                 { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
             )
-    }
-
-    @PutMapping("/me/password")
-    fun updateCurrentUserPassword(
-        @AuthenticationPrincipal currentUser: UserDetailsImp,
-        @RequestBody request: ChangePasswordRequest
-    ): ResponseEntity<Any> {
-        val result = request
-            .validate()
-            .flatMap { validated ->
-                userService.updatePassword(currentUser.id, validated)
-            }
-
-        return result.fold(
-            { failure -> httpFailureResolver.handleFailure(failure) },
-            { ResponseEntity.status(HttpStatus.OK).build() }
-        )
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")

@@ -16,13 +16,7 @@ class HttpFailureResolver {
             is LoginTypeFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
             is RoleFailure.NotFound -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(failure.message())
 
-            // Refresh Token
-            is RefreshTokenFailure.Empty -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
-            is RefreshTokenFailure.NotFound -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(failure.message())
-            is RefreshTokenFailure.Expired -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failure.message())
-
             // Authentication
-            is AuthenticationFailure -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failure.message())
             is AuthHeaderFailure -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failure.message())
             is JwtFailure -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(failure.message())
 

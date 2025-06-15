@@ -3,7 +3,10 @@ package com.coursy.users.service
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.coursy.users.dto.*
+import com.coursy.users.dto.RegistrationRequest
+import com.coursy.users.dto.RoleUpdateRequest
+import com.coursy.users.dto.UserResponse
+import com.coursy.users.dto.toUserResponse
 import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.failure.Failure
 import com.coursy.users.failure.RoleFailure
@@ -93,19 +96,6 @@ class UserService(
         return userRepository
             .save(user)
             .toUserResponse().right()
-    }
-
-    fun updatePassword(
-        userId: Long,
-        request: ChangePasswordRequest.Validated
-    ): Either<Failure, Unit> {
-        val user = userRepository
-            .findById(userId)
-            .getOrElse { return UserFailure.IdNotExists.left() }
-
-        user.password = passwordEncoder.encode(request.password.value)
-        userRepository.save(user)
-        return Unit.right()
     }
 
     private fun createUser(request: RegistrationRequest.Validated, role: Role): User {
