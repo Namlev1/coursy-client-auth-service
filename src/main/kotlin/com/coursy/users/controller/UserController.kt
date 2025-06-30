@@ -15,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @RestController
 class UserController(
     private val userService: UserService,

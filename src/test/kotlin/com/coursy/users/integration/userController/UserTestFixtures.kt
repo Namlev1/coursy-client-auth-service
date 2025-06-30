@@ -8,8 +8,8 @@ import com.coursy.users.types.Login
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class UserTestFixtures {
-    val userUrl = "/v1/users"
-    val authUrl = "/v1/auth"
+    val userUrl = "/api/users"
+    val authUrl = "/api/auth"
     val registrationLogin = "registration login"
     val registrationEmail = "registration@email.com"
     val registrationPassword = "Str0ngPassw0RD!!"
