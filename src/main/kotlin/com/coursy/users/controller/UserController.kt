@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RequestMapping("/api/users")
 @RestController
@@ -79,7 +80,7 @@ class UserController(
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @GetMapping("/{id}")
-    fun getUser(@PathVariable id: Long) = userService
+    fun getUser(@PathVariable id: UUID) = userService
         .getUser(id)
         .fold(
             { failure -> httpFailureResolver.handleFailure(failure) },
@@ -89,7 +90,7 @@ class UserController(
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @PutMapping("/{id}")
     fun updateUserRole(
-        @PathVariable id: Long,
+        @PathVariable id: UUID,
         @RequestBody request: RoleUpdateRequest,
         jwt: PreAuthenticatedAuthenticationToken
     ): ResponseEntity<Any> {
@@ -110,7 +111,7 @@ class UserController(
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @DeleteMapping("/{id}")
     fun deleteUser(
-        @PathVariable id: Long,
+        @PathVariable id: UUID,
         jwt: PreAuthenticatedAuthenticationToken
     ): ResponseEntity<Any> {
         val principalRole = extractPrincipalRole(jwt)

@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
 import readToken
+import java.util.*
 import kotlin.jvm.optionals.getOrElse
 
 @Service
@@ -51,7 +52,7 @@ class UserService(
     }
 
     fun removeUser(
-        id: Long,
+        id: UUID,
         principalRole: RoleName
     ): Either<Failure, Unit> {
         val user = userRepository
@@ -73,7 +74,7 @@ class UserService(
             .getOrElse { UserFailure.IdNotExists.left() }
     }
 
-    fun getUser(id: Long): Either<Failure, UserResponse> {
+    fun getUser(id: UUID): Either<Failure, UserResponse> {
         return userRepository.findById(id)
             .map { it.toUserResponse().right() }
             .getOrElse { UserFailure.IdNotExists.left() }
@@ -85,7 +86,7 @@ class UserService(
             .let { pagedResourcesAssembler.toModel(it) }
 
     fun updateUserRole(
-        userId: Long,
+        userId: UUID,
         request: RoleUpdateRequest.Validated,
         principalRole: RoleName
     ): Either<Failure, UserResponse> {

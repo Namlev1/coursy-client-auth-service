@@ -5,12 +5,12 @@ import com.coursy.users.types.Login
 import jakarta.persistence.*
 import org.hibernate.Hibernate
 import java.time.Instant
+import java.util.*
 
 @Entity(name = "_user")
 class User(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    var id: UUID = UUID.randomUUID(),
     @Column(unique = true)
     var login: Login,
     @Column(unique = true)
