@@ -1,8 +1,8 @@
 spring:
   application:
-    name: client-auth-service
+    name: users
   datasource:
-    url: jdbc:postgresql://localhost:10001/auth_db
+    url: jdbc:postgresql://localhost:5432/users_db
     username: postgres
     password: postgres
   jpa:
