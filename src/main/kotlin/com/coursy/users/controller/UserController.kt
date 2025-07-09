@@ -6,13 +6,12 @@ import com.coursy.users.dto.RegistrationRequest
 import com.coursy.users.dto.RoleUpdateRequest
 import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.model.RoleName
-import com.coursy.users.security.UserDetailsImp
 import com.coursy.users.service.UserService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.web.bind.annotation.*
 
 @RequestMapping("/api/users")
@@ -54,9 +53,11 @@ class UserController(
     private fun isRegistrationRolePermitted(request: RegistrationRequest.Validated) =
         request.roleName == RoleName.ROLE_STUDENT || request.roleName == RoleName.ROLE_TEACHER
     @GetMapping("/me")
-    fun getCurrentUser(@AuthenticationPrincipal currentUser: UserDetailsImp): ResponseEntity<Any> {
+    fun getCurrentUser(
+        jwt: PreAuthenticatedAuthenticationToken
+    ): ResponseEntity<Any> {
         return userService
-            .getUser(currentUser.id)
+            .getUser(jwt)
             .fold(
                 { failure -> httpFailureResolver.handleFailure(failure) },
                 { response -> ResponseEntity.status(HttpStatus.OK).body(response) }
@@ -90,9 +91,9 @@ class UserController(
     fun updateUserRole(
         @PathVariable id: Long,
         @RequestBody request: RoleUpdateRequest,
-        @AuthenticationPrincipal principal: UserDetailsImp
+        jwt: PreAuthenticatedAuthenticationToken
     ): ResponseEntity<Any> {
-        val principalRole = extractPrincipalRole(principal)
+        val principalRole = extractPrincipalRole(jwt)
         val result = request
             .validate()
             .flatMap { validated ->
@@ -110,9 +111,9 @@ class UserController(
     @DeleteMapping("/{id}")
     fun deleteUser(
         @PathVariable id: Long,
-        @AuthenticationPrincipal principal: UserDetailsImp
+        jwt: PreAuthenticatedAuthenticationToken
     ): ResponseEntity<Any> {
-        val principalRole = extractPrincipalRole(principal)
+        val principalRole = extractPrincipalRole(jwt)
 
         return userService.removeUser(id, principalRole)
             .fold(
@@ -121,7 +122,7 @@ class UserController(
             )
     }
 
-    private fun extractPrincipalRole(principal: UserDetailsImp): RoleName {
+    private fun extractPrincipalRole(principal: PreAuthenticatedAuthenticationToken): RoleName {
         val principalRole = RoleName.valueOf(principal.authorities.first().authority)
         return principalRole
     }

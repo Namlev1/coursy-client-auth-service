@@ -20,7 +20,9 @@ import jakarta.transaction.Transactional
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
+import readToken
 import kotlin.jvm.optionals.getOrElse
 
 @Service
@@ -62,6 +64,13 @@ class UserService(
 
         userRepository.removeUserById(id)
         return Unit.right()
+    }
+
+    fun getUser(jwt: PreAuthenticatedAuthenticationToken): Either<Failure, UserResponse> {
+        val (_, id) = jwt.readToken()
+        return userRepository.findById(id)
+            .map { it.toUserResponse().right() }
+            .getOrElse { UserFailure.IdNotExists.left() }
     }
 
     fun getUser(id: Long): Either<Failure, UserResponse> {
