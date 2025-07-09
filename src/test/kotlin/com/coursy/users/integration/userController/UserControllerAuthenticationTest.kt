@@ -3,7 +3,7 @@ package com.coursy.users.integration.userController
 import io.kotest.core.spec.style.BehaviorSpec
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -29,7 +29,7 @@ class UserControllerAuthenticationTest(
         given("user is STUDENT") {
             `when`("accessing /users") {
                 val result = mockMvc.get(url) {
-                    with(user(fixtures.studentDetails))
+                    with(authentication(fixtures.studentToken))
                 }
                 then("should return 403") {
                     result.andExpect { status { isForbidden() } }
@@ -39,7 +39,7 @@ class UserControllerAuthenticationTest(
         given("user is ADMIN") {
             `when`("accessing /users") {
                 val result = mockMvc.get(url) {
-                    with(user(fixtures.adminDetails))
+                    with(authentication(fixtures.adminToken))
                 }
                 then("should return 200") {
                     result.andExpect { status { isOk() } }
@@ -49,7 +49,7 @@ class UserControllerAuthenticationTest(
         given("user is SUPER_ADMIN") {
             `when`("accessing /users") {
                 val result = mockMvc.get(url) {
-                    with(user(fixtures.superAdmirDetails))
+                    with(authentication(fixtures.superAdminToken))
                 }
                 then("should return 200") {
                     result.andExpect { status { isOk() } }

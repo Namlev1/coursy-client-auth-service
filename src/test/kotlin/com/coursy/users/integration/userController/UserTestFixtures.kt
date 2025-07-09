@@ -2,10 +2,9 @@ package com.coursy.users.integration.userController
 
 import com.coursy.users.dto.RegistrationRequest
 import com.coursy.users.model.RoleName
-import com.coursy.users.security.UserDetailsImp
 import com.coursy.users.types.Email
-import com.coursy.users.types.Login
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 
 class UserTestFixtures {
     val userUrl = "/api/users"
@@ -21,33 +20,21 @@ class UserTestFixtures {
         registrationRole
     )
 
-    val studentDetails = UserDetailsImp(
-        id = 1L,
-        email = Email.create("testuser@example.com").getOrNull()!!,
-        authorities = mutableSetOf(SimpleGrantedAuthority("ROLE_STUNENT")),
-        password = "password",
-        login = Login.create("testuser").getOrNull()!!,
-        enabled = true,
-        accountNonLocked = true
-    )
+    val studentToken = PreAuthenticatedAuthenticationToken(
+        Email.create("testuser@example.com").getOrNull()!!,
+        null,
+        mutableSetOf(SimpleGrantedAuthority("ROLE_STUDENT"))
+    ).apply { isAuthenticated = true }
 
-    val adminDetails = UserDetailsImp(
-        id = 1L,
-        email = Email.create("testuser@example.com").getOrNull()!!,
-        authorities = mutableSetOf(SimpleGrantedAuthority("ROLE_ADMIN")),
-        password = "password",
-        login = Login.create("testuser").getOrNull()!!,
-        enabled = true,
-        accountNonLocked = true
-    )
+    val adminToken = PreAuthenticatedAuthenticationToken(
+        Email.create("testuser@example.com").getOrNull()!!,
+        null,
+        mutableSetOf(SimpleGrantedAuthority("ROLE_ADMIN"))
+    ).apply { isAuthenticated = true }
 
-    val superAdmirDetails = UserDetailsImp(
-        id = 1L,
-        email = Email.create("testuser@example.com").getOrNull()!!,
-        authorities = mutableSetOf(SimpleGrantedAuthority("ROLE_SUPER_ADMIN")),
-        password = "password",
-        login = Login.create("testuser").getOrNull()!!,
-        enabled = true,
-        accountNonLocked = true
-    )
+    val superAdminToken = PreAuthenticatedAuthenticationToken(
+        Email.create("testuser@example.com").getOrNull()!!,
+        null,
+        mutableSetOf(SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))
+    ).apply { isAuthenticated = true }
 }

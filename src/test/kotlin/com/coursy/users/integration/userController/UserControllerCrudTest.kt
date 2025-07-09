@@ -13,9 +13,11 @@ import jakarta.transaction.Transactional
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.*
+import java.util.*
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -90,7 +92,7 @@ class UserControllerCrudTest(
                     val userId = registerUser()
 
                     val result = mockMvc.delete("$url/$userId") {
-                        with(user(fixtures.adminDetails))
+                        with(authentication(fixtures.adminToken))
                     }
 
                     result.andExpect {
@@ -102,7 +104,7 @@ class UserControllerCrudTest(
                     val userId = registerUser()
 
                     mockMvc.delete("$url/$userId") {
-                        with(user(fixtures.adminDetails))
+                        with(authentication(fixtures.adminToken))
                     }
 
                     userRepository.findById(userId).shouldBeEmpty()
@@ -119,7 +121,7 @@ class UserControllerCrudTest(
                             val result = mockMvc.put("$url/$userId") {
                                 content = mapper.writeValueAsString(request)
                                 contentType = MediaType.APPLICATION_JSON
-                                with(user(fixtures.adminDetails))
+                                with(authentication(fixtures.adminToken))
                             }
 
                             result.andExpect {
@@ -137,7 +139,7 @@ class UserControllerCrudTest(
                             val result = mockMvc.put("$url/$userId") {
                                 content = mapper.writeValueAsString(request)
                                 contentType = MediaType.APPLICATION_JSON
-                                with(user(fixtures.adminDetails))
+                                with(authentication(fixtures.adminToken))
                             }
                             return result
                         }
@@ -171,7 +173,7 @@ class UserControllerCrudTest(
                             val result = mockMvc.put("$url/$userId") {
                                 content = mapper.writeValueAsString(request)
                                 contentType = MediaType.APPLICATION_JSON
-                                with(user(fixtures.superAdmirDetails))
+                                with(authentication(fixtures.superAdminToken))
                             }
                             return result
                         }
@@ -199,7 +201,7 @@ class UserControllerCrudTest(
         given("user not in database") {
             `when`("retrieving user data") {
                 then("should return 404 with IdNotExists") {
-                    val nonExistentUserId = 999999L
+                    val nonExistentUserId = UUID.randomUUID()
 
                     val result = mockMvc.get("$url/$nonExistentUserId") {
                         with(user("testuser").roles("ADMIN"))
@@ -214,10 +216,10 @@ class UserControllerCrudTest(
 
             `when`("removing the user") {
                 then("should return 404 with IdNotExists") {
-                    val nonExistentUserId = 999999L
+                    val nonExistentUserId = UUID.randomUUID()
 
                     val result = mockMvc.delete("$url/$nonExistentUserId") {
-                        with(user(fixtures.adminDetails))
+                        with(authentication(fixtures.adminToken))
                     }
 
                     result.andExpect {
@@ -229,13 +231,13 @@ class UserControllerCrudTest(
 
             `when`("SUPER_ADMIN attempts to change non-existent user role") {
                 then("should return 404 with IdNotExists") {
-                    val nonExistentUserId = 999999L
+                    val nonExistentUserId = UUID.randomUUID()
 
                     val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
                     val result = mockMvc.put("$url/$nonExistentUserId") {
                         content = mapper.writeValueAsString(request)
                         contentType = MediaType.APPLICATION_JSON
-                        with(user(fixtures.superAdmirDetails))
+                        with(authentication(fixtures.superAdminToken))
                     }
 
                     result.andExpect {
@@ -247,7 +249,7 @@ class UserControllerCrudTest(
         }
     }
 
-    private fun registerUser(): Long {
+    private fun registerUser(): UUID {
         val registrationRequest = fixtures.registrationRequest
         mockMvc
             .post("$url/register") {
