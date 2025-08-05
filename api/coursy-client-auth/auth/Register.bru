@@ -5,13 +5,9 @@ meta {
 }
 
 post {
-  url: {{url}}/user
+  url: {{url}}/users/register
   body: json
-  auth: bearer
-}
-
-auth:bearer {
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGVtYWlsLmNvbSIsInJvbGVzIjpbIlJPTEVfU1RVREVOVCJdLCJpYXQiOjE3NDg5NDc3MzQsImV4cCI6MTc0ODk1MTMzNH0.tBxcZ2j3HDpGcFB94CyNQasNcJPSUNzWnY-e1u5pb3c
+  auth: none
 }
 
 body:json {

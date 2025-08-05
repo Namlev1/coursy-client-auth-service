@@ -13,7 +13,6 @@ class HttpFailureResolver {
             is EmailFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
             is NameFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
             is PasswordFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
-            is LoginTypeFailure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())
             is RoleFailure.NotFound -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(failure.message())
 
             // Authentication
@@ -25,7 +24,6 @@ class HttpFailureResolver {
 
             // User creation
             is UserFailure.EmailAlreadyExists -> ResponseEntity.status(HttpStatus.CONFLICT).body(failure.message())
-            is UserFailure.LoginAlreadyExists -> ResponseEntity.status(HttpStatus.CONFLICT).body(failure.message())
             is UserFailure.IdNotExists -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(failure.message())
 
             else -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(failure.message())

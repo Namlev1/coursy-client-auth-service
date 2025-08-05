@@ -1,7 +1,7 @@
 package com.coursy.users.model
 
 import com.coursy.users.types.Email
-import com.coursy.users.types.Login
+import com.coursy.users.types.Name
 import jakarta.persistence.*
 import org.hibernate.Hibernate
 import java.time.Instant
@@ -12,9 +12,9 @@ class User(
     @Id
     var id: UUID = UUID.randomUUID(),
     @Column(unique = true)
-    var login: Login,
-    @Column(unique = true)
     var email: Email,
+    var firstName: Name,
+    var lastName: Name,
     var password: String,
     var createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now(),

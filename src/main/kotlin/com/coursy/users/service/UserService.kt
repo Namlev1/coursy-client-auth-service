@@ -39,10 +39,6 @@ class UserService(
             return UserFailure.EmailAlreadyExists.left()
         }
 
-        if (userRepository.existsByLogin(request.login)) {
-            return UserFailure.LoginAlreadyExists.left()
-        }
-
         val role = roleRepository.findByName(request.roleName)
             .getOrElse { return RoleFailure.NotFound.left() }
 
@@ -111,10 +107,11 @@ class UserService(
     private fun createUser(request: RegistrationRequest.Validated, role: Role): User {
         val encryptedPassword = passwordEncoder.encode(request.password.value)
         return User(
-            login = request.login,
             email = request.email,
             password = encryptedPassword,
-            role = role
+            role = role,
+            firstName = request.firstName,
+            lastName = request.lastName
         )
     }
 

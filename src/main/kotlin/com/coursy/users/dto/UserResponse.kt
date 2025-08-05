@@ -2,13 +2,14 @@ package com.coursy.users.dto
 
 import com.coursy.users.model.User
 import com.coursy.users.types.Email
-import com.coursy.users.types.Login
+import com.coursy.users.types.Name
 import java.util.*
 
 data class UserResponse(
     val id: UUID,
     val email: Email,
-    val login: Login,
+    val firstName: Name,
+    val lastName: Name,
     val roleName: String,
 )
 
@@ -16,7 +17,8 @@ fun User.toUserResponse(): UserResponse {
     return UserResponse(
         id = this.id,
         email = this.email,
-        login = this.login,
-        roleName = this.role.name.name
+        roleName = this.role.name.name,
+        firstName = this.firstName,
+        lastName = this.lastName
     )
 } 
