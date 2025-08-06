@@ -127,4 +127,46 @@ class AuthorizationService {
             }
         }
     }
+    fun canUpdateUserRole(jwt: PreAuthenticatedAuthenticationToken, targetUser: User, newRole: Role): Boolean {
+        val principalRole = jwt
+            .authorities
+            .first()
+            .toRole()
+            .getOrElse {
+                logger.warn("Invalid role in JWT: ${it.message}")
+                return false
+            }
+
+        val principalPlatformId = jwt.getPlatformId()
+        val targetUserPlatformId = targetUser.platformId
+
+        return when (principalRole) {
+            Role.ROLE_HOST_OWNER -> true
+
+            Role.ROLE_HOST_ADMIN -> {
+                // Can assign admin roles (any admin role)
+                newRole in listOf(
+                    Role.ROLE_HOST_ADMIN,
+                    Role.ROLE_PLATFORM_OWNER,
+                    Role.ROLE_PLATFORM_ADMIN
+                )
+            }
+
+            Role.ROLE_PLATFORM_OWNER -> {
+                // Can do anything within their platform
+                targetUserPlatformId == principalPlatformId
+            }
+
+            Role.ROLE_PLATFORM_ADMIN -> {
+                // Can assign admin roles within their platform
+                targetUserPlatformId == principalPlatformId &&
+                        newRole in listOf(
+                    Role.ROLE_PLATFORM_ADMIN,
+                    Role.ROLE_PLATFORM_USER
+                )
+            }
+
+            Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER -> false // Can't update anything
+        }
+    }
 }

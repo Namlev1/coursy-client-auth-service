@@ -100,24 +100,20 @@ class UserService(
     fun updateUserRole(
         userId: UUID,
         request: RoleUpdateRequest.Validated,
-        principalRole: Role
+        jwt: PreAuthenticatedAuthenticationToken
     ): Either<Failure, UserResponse> {
         val user = userRepository
             .findById(userId)
             .getOrElse { return UserFailure.IdNotExists.left() }
 
-        if (!canUpdateUserRole(principalRole, request.roleName, user)) {
+        if (!authorizationService.canUpdateUserRole(jwt, user, request.roleName)) {
             return AuthorizationFailure.InsufficientRole.left()
         }
-
-        val role = roleRepository
-            .findByName(request.roleName)
-            .getOrElse { return RoleFailure.NotFound.left() }
-
-        user.role = role
+        user.role = request.roleName
         return userRepository
             .save(user)
-            .toUserResponse().right()
+            .toUserResponse()
+            .right()
     }
 
     private fun createUserEntity(request: RegistrationRequest.Validated, tenantId: UUID?): User {
