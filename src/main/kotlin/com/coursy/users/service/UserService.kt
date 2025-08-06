@@ -16,6 +16,7 @@ import com.coursy.users.model.User
 import com.coursy.users.repository.UserRepository
 import com.coursy.users.repository.UserSpecification
 import com.coursy.users.security.AuthorizationService
+import getId
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
@@ -74,8 +75,8 @@ class UserService(
         return Unit.right()
     }
 
-    fun getUser(jwt: PreAuthenticatedAuthenticationToken): Either<Failure, UserResponse> {
-        val (_, id) = jwt.readToken()
+    fun getPrincipalUser(jwt: PreAuthenticatedAuthenticationToken): Either<Failure, UserResponse> {
+        val id = jwt.getId()
         return userRepository.findById(id)
             .map { it.toUserResponse().right() }
             .getOrElse { UserFailure.IdNotExists.left() }

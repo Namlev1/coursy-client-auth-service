@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.model.toRole
-import getTenantId
+import getPlatformId
 import org.slf4j.LoggerFactory
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
@@ -33,7 +33,7 @@ class AuthorizationService {
             logger.warn("Invalid role in JWT: ${it.message}")
             return false
         }
-        val principalPlatformId = jwt.getTenantId()
+        val principalPlatformId = jwt.getPlatformId()
         
 
         return when (principalRole) {
@@ -60,7 +60,7 @@ class AuthorizationService {
                 return false
             }
 
-        val principalPlatformId = jwt.getTenantId()
+        val principalPlatformId = jwt.getPlatformId()
         val targetUserPlatformId = user.platformId
 
         return when (principalRole) {
@@ -100,7 +100,7 @@ class AuthorizationService {
                 return false
             }
 
-        val principalPlatformId = jwt.getTenantId()
+        val principalPlatformId = jwt.getPlatformId()
         val targetUserPlatformId = user.platformId
 
         return when (principalRole) {

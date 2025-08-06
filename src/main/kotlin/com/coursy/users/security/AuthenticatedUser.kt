@@ -5,5 +5,6 @@ import java.util.*
 
 data class AuthenticatedUser(
     val email: Email,
-    val tenantId: UUID?
+    val id: UUID,
+    val platformId: UUID?
 )
