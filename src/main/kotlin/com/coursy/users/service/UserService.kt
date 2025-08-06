@@ -15,6 +15,7 @@ import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.repository.UserRepository
 import com.coursy.users.repository.UserSpecification
+import com.coursy.users.security.AuthorizationService
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
@@ -30,9 +31,18 @@ import kotlin.jvm.optionals.getOrElse
 class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val authorizationService: AuthorizationService,
     private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
 ) {
-    fun createUser(request: RegistrationRequest.Validated, tenantId: UUID?): Either<Failure, Unit> {
+    fun createUser(
+        request: RegistrationRequest.Validated,
+        tenantId: UUID?,
+        jwt: PreAuthenticatedAuthenticationToken
+    ): Either<Failure, Unit> {
+        if (!authorizationService.canCreateUserWithRole(jwt, tenantId, request.roleName)) {
+            return AuthorizationFailure.InsufficientRole.left()
+        }
+
         val specification = UserSpecification
             .builder()
             .email(request.email)
@@ -47,7 +57,7 @@ class UserService(
         userRepository.save(user)
         return Unit.right()
     }
-    
+
     fun removeUser(
         id: UUID,
         principalRole: Role
