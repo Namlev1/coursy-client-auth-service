@@ -12,10 +12,9 @@ import com.coursy.users.failure.Failure
 import com.coursy.users.failure.RoleFailure
 import com.coursy.users.failure.UserFailure
 import com.coursy.users.model.Role
-import com.coursy.users.model.Role
 import com.coursy.users.model.User
-import com.coursy.users.repository.RoleRepository
 import com.coursy.users.repository.UserRepository
+import com.coursy.users.repository.UserSpecification
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
@@ -30,23 +29,25 @@ import kotlin.jvm.optionals.getOrElse
 @Transactional
 class UserService(
     private val userRepository: UserRepository,
-    private val roleRepository: RoleRepository,
     private val passwordEncoder: PasswordEncoder,
     private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
 ) {
-    fun createUser(request: RegistrationRequest.Validated): Either<Failure, Unit> {
-        if (userRepository.existsByEmail(request.email)) {
+    fun createUser(request: RegistrationRequest.Validated, tenantId: UUID?): Either<Failure, Unit> {
+        val specification = UserSpecification
+            .builder()
+            .email(request.email)
+            .tenantId(tenantId)
+            .build()
+
+        if (userRepository.exists(specification)) {
             return UserFailure.EmailAlreadyExists.left()
         }
 
-        val role = roleRepository.findByName(request.roleName)
-            .getOrElse { return RoleFailure.NotFound.left() }
-
-        val user = createUser(request, role)
+        val user = createUserEntity(request, tenantId)
         userRepository.save(user)
         return Unit.right()
     }
-
+    
     fun removeUser(
         id: UUID,
         principalRole: Role
@@ -104,14 +105,15 @@ class UserService(
             .toUserResponse().right()
     }
 
-    private fun createUser(request: RegistrationRequest.Validated, role: Role): User {
+    private fun createUserEntity(request: RegistrationRequest.Validated, tenantId: UUID?): User {
         val encryptedPassword = passwordEncoder.encode(request.password.value)
         return User(
             email = request.email,
             password = encryptedPassword,
-            role = role,
+            role = request.roleName,
             firstName = request.firstName,
-            lastName = request.lastName
+            lastName = request.lastName,
+            tenantId = tenantId
         )
     }
 

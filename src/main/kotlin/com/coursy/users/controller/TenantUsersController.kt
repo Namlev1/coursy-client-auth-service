@@ -15,15 +15,15 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
-@RequestMapping("/api/users")
+@RequestMapping("/api/users/tenant/{tenantId}")
 @RestController
-class UserController(
+class TenantUsersController(
     private val userService: UserService,
     private val httpFailureResolver: HttpFailureResolver
 ) {
 
     @PostMapping("/register")
-    fun createUser(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
+    fun createUser(@PathVariable tenantId: UUID, @RequestBody request: RegistrationRequest): ResponseEntity<Any> {
         val result = request
             .validate()
             .flatMap { validated ->
@@ -53,6 +53,7 @@ class UserController(
 
     private fun isRegistrationRolePermitted(request: RegistrationRequest.Validated) =
         request.roleName == Role.ROLE_STUDENT || request.roleName == Role.ROLE_TEACHER
+
     @GetMapping("/me")
     fun getCurrentUser(
         jwt: PreAuthenticatedAuthenticationToken
