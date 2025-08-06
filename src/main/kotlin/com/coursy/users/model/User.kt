@@ -22,8 +22,7 @@ class User(
     var enabled: Boolean = true,
     var accountNonLocked: Boolean = true,
     var failedAttempts: Int = 0,
-    @ManyToOne
-    @JoinColumn(name = "role_id")
+    @Enumerated(EnumType.STRING)
     var role: Role
 ) {
     override fun equals(other: Any?): Boolean {

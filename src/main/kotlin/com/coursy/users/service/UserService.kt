@@ -12,7 +12,7 @@ import com.coursy.users.failure.Failure
 import com.coursy.users.failure.RoleFailure
 import com.coursy.users.failure.UserFailure
 import com.coursy.users.model.Role
-import com.coursy.users.model.RoleName
+import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.repository.RoleRepository
 import com.coursy.users.repository.UserRepository
@@ -49,7 +49,7 @@ class UserService(
 
     fun removeUser(
         id: UUID,
-        principalRole: RoleName
+        principalRole: Role
     ): Either<Failure, Unit> {
         val user = userRepository
             .findById(id)
@@ -84,7 +84,7 @@ class UserService(
     fun updateUserRole(
         userId: UUID,
         request: RoleUpdateRequest.Validated,
-        principalRole: RoleName
+        principalRole: Role
     ): Either<Failure, UserResponse> {
         val user = userRepository
             .findById(userId)
@@ -116,21 +116,21 @@ class UserService(
     }
 
     private fun canUpdateUserRole(
-        principalRole: RoleName,
-        newRole: RoleName,
+        principalRole: Role,
+        newRole: Role,
         updatedUser: User
     ): Boolean {
-        if (principalRole == RoleName.ROLE_ADMIN) {
+        if (principalRole == Role.ROLE_ADMIN) {
             // Admin tries to assign SUPER_ADMIN
-            if (newRole == RoleName.ROLE_SUPER_ADMIN) {
+            if (newRole == Role.ROLE_SUPER_ADMIN) {
                 return false
             }
 
             // Admin tries to change another ADMIN or SUPER_ADMIN
-            if (updatedUser.role.name == RoleName.ROLE_SUPER_ADMIN) {
+            if (updatedUser.role.name == Role.ROLE_SUPER_ADMIN) {
                 return false
             }
-            if (updatedUser.role.name == RoleName.ROLE_ADMIN) {
+            if (updatedUser.role.name == Role.ROLE_ADMIN) {
                 return false
             }
         }
@@ -138,17 +138,17 @@ class UserService(
     }
 
     private fun canDeleteUser(
-        principalRole: RoleName,
+        principalRole: Role,
         user: User
     ): Boolean {
-        if (principalRole == RoleName.ROLE_ADMIN) {
+        if (principalRole == Role.ROLE_ADMIN) {
             // Admin tries to delete SUPER_ADMIN
-            if (user.role.name == RoleName.ROLE_SUPER_ADMIN) {
+            if (user.role.name == Role.ROLE_SUPER_ADMIN) {
                 return false
             }
 
             // Admin tries to delete another ADMIN
-            if (user.role.name == RoleName.ROLE_ADMIN) {
+            if (user.role.name == Role.ROLE_ADMIN) {
                 return false
             }
         }

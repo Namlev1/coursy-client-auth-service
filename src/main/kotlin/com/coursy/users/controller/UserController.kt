@@ -5,7 +5,7 @@ import arrow.core.left
 import com.coursy.users.dto.RegistrationRequest
 import com.coursy.users.dto.RoleUpdateRequest
 import com.coursy.users.failure.AuthorizationFailure
-import com.coursy.users.model.RoleName
+import com.coursy.users.model.Role
 import com.coursy.users.service.UserService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
@@ -42,7 +42,7 @@ class UserController(
     @PostMapping("/register/admin")
     fun createAdmin(@RequestBody request: RegistrationRequest): ResponseEntity<Any> {
         val result = request
-            .copy(roleName = RoleName.ROLE_ADMIN.toString())
+            .copy(roleName = Role.ROLE_ADMIN.toString())
             .validate()
 
         return result.fold(
@@ -52,7 +52,7 @@ class UserController(
     }
 
     private fun isRegistrationRolePermitted(request: RegistrationRequest.Validated) =
-        request.roleName == RoleName.ROLE_STUDENT || request.roleName == RoleName.ROLE_TEACHER
+        request.roleName == Role.ROLE_STUDENT || request.roleName == Role.ROLE_TEACHER
     @GetMapping("/me")
     fun getCurrentUser(
         jwt: PreAuthenticatedAuthenticationToken
@@ -123,8 +123,8 @@ class UserController(
             )
     }
 
-    private fun extractPrincipalRole(principal: PreAuthenticatedAuthenticationToken): RoleName {
-        val principalRole = RoleName.valueOf(principal.authorities.first().authority)
+    private fun extractPrincipalRole(principal: PreAuthenticatedAuthenticationToken): Role {
+        val principalRole = Role.valueOf(principal.authorities.first().authority)
         return principalRole
     }
 

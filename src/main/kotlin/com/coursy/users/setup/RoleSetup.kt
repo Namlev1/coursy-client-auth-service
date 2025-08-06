@@ -1,7 +1,7 @@
 package com.coursy.users.setup
 
 import com.coursy.users.model.Role
-import com.coursy.users.model.RoleName
+import com.coursy.users.model.Role
 import com.coursy.users.repository.RoleRepository
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
@@ -29,7 +29,7 @@ class RoleSetup(
 
         roleNames.forEach { roleName ->
             try {
-                val roleEnum = RoleName.valueOf(roleName)
+                val roleEnum = Role.valueOf(roleName)
                 if (repository.existsByName(roleEnum)) {
                     logger.warn("Role name $roleName exists in DB - skipping")
                     return@forEach

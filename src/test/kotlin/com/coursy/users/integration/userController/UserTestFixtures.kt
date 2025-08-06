@@ -1,7 +1,7 @@
 package com.coursy.users.integration.userController
 
 import com.coursy.users.dto.RegistrationRequest
-import com.coursy.users.model.RoleName
+import com.coursy.users.model.Role
 import com.coursy.users.types.Email
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
@@ -12,7 +12,7 @@ class UserTestFixtures {
     val registrationLogin = "registration login"
     val registrationEmail = "registration@email.com"
     val registrationPassword = "Str0ngPassw0RD!!"
-    val registrationRole = RoleName.ROLE_STUDENT.name
+    val registrationRole = Role.ROLE_STUDENT.name
     val registrationRequest = RegistrationRequest(
         registrationLogin,
         registrationEmail,

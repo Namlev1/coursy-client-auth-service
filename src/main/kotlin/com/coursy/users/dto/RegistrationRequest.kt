@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.coursy.users.failure.Failure
 import com.coursy.users.failure.RoleFailure
-import com.coursy.users.model.RoleName
+import com.coursy.users.model.Role
 import com.coursy.users.types.Email
 import com.coursy.users.types.Name
 import com.coursy.users.types.Password
@@ -23,7 +23,7 @@ data class RegistrationRequest(
         val firstName: Name,
         val lastName: Name,
         val password: Password,
-        val roleName: RoleName
+        val roleName: Role
     )
 
     override fun validate(): Either<Failure, Validated> {
@@ -32,7 +32,7 @@ data class RegistrationRequest(
             val passwordResult = Password.create(password).bind()
             val firstNameResult = Name.create(firstName).bind()
             val lastNameResult = Name.create(lastName).bind()
-            val roleNameResult = catch { RoleName.valueOf(roleName) }
+            val roleNameResult = catch { Role.valueOf(roleName) }
                 .mapLeft { RoleFailure.NotFound }
                 .bind()
 

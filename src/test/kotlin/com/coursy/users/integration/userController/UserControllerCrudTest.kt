@@ -3,7 +3,7 @@ package com.coursy.users.integration.userController
 import com.coursy.users.dto.RoleUpdateRequest
 import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.failure.UserFailure
-import com.coursy.users.model.RoleName
+import com.coursy.users.model.Role
 import com.coursy.users.repository.UserRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.core.spec.style.BehaviorSpec
@@ -117,7 +117,7 @@ class UserControllerCrudTest(
                         then("should return 200") {
                             val userId = registerUser()
 
-                            val request = RoleUpdateRequest(RoleName.ROLE_ADMIN.name)
+                            val request = RoleUpdateRequest(Role.ROLE_ADMIN.name)
                             val result = mockMvc.put("$url/$userId") {
                                 content = mapper.writeValueAsString(request)
                                 contentType = MediaType.APPLICATION_JSON
@@ -135,7 +135,7 @@ class UserControllerCrudTest(
                         fun test(): ResultActionsDsl {
                             val userId = registerUser()
 
-                            val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
+                            val request = RoleUpdateRequest(Role.ROLE_SUPER_ADMIN.name)
                             val result = mockMvc.put("$url/$userId") {
                                 content = mapper.writeValueAsString(request)
                                 contentType = MediaType.APPLICATION_JSON
@@ -169,7 +169,7 @@ class UserControllerCrudTest(
                         fun test(): ResultActionsDsl {
                             val userId = registerUser()
 
-                            val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
+                            val request = RoleUpdateRequest(Role.ROLE_SUPER_ADMIN.name)
                             val result = mockMvc.put("$url/$userId") {
                                 content = mapper.writeValueAsString(request)
                                 contentType = MediaType.APPLICATION_JSON
@@ -191,7 +191,7 @@ class UserControllerCrudTest(
 
                             val user = userRepository.findByEmail(fixtures.registrationEmail)
                                 ?: throw IllegalStateException("User not found after role update")
-                            user.role.name shouldBe RoleName.ROLE_SUPER_ADMIN
+                            user.role.name shouldBe Role.ROLE_SUPER_ADMIN
                         }
                     }
                 }
@@ -233,7 +233,7 @@ class UserControllerCrudTest(
                 then("should return 404 with IdNotExists") {
                     val nonExistentUserId = UUID.randomUUID()
 
-                    val request = RoleUpdateRequest(RoleName.ROLE_SUPER_ADMIN.name)
+                    val request = RoleUpdateRequest(Role.ROLE_SUPER_ADMIN.name)
                     val result = mockMvc.put("$url/$nonExistentUserId") {
                         content = mapper.writeValueAsString(request)
                         contentType = MediaType.APPLICATION_JSON
