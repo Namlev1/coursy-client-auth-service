@@ -65,8 +65,8 @@ class UserService(
         val user = userRepository
             .findById(id)
             .getOrElse { return UserFailure.IdNotExists.left() }
-        
-        if(!authorizationService.canRemoveUser(jwt, user)) {
+
+        if (!authorizationService.canRemoveUser(jwt, user)) {
             return AuthorizationFailure.InsufficientRole.left()
         }
 
@@ -81,10 +81,14 @@ class UserService(
             .getOrElse { UserFailure.IdNotExists.left() }
     }
 
-    fun getUser(id: UUID): Either<Failure, UserResponse> {
-        return userRepository.findById(id)
-            .map { it.toUserResponse().right() }
-            .getOrElse { UserFailure.IdNotExists.left() }
+    fun getUser(jwt: PreAuthenticatedAuthenticationToken, id: UUID): Either<Failure, UserResponse> {
+        val user = userRepository
+            .findById(id)
+            .getOrElse { return UserFailure.IdNotExists.left() }
+        if (!authorizationService.canFetchUser(jwt, user)) {
+            return AuthorizationFailure.InsufficientRole.left()
+        }
+        return user.toUserResponse().right()
     }
 
     fun getUserPage(pageRequest: PageRequest) =

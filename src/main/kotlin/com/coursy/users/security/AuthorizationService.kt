@@ -90,4 +90,41 @@ class AuthorizationService {
             Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER -> false // Can't remove anyone
         }
     }
+    fun canFetchUser(jwt: PreAuthenticatedAuthenticationToken, user: User): Boolean {
+        val principalRole = jwt
+            .authorities
+            .first()
+            .toRole()
+            .getOrElse {
+                logger.warn("Invalid role in JWT: ${it.message}")
+                return false
+            }
+
+        val principalPlatformId = jwt.getTenantId()
+        val targetUserPlatformId = user.platformId
+
+        return when (principalRole) {
+            Role.ROLE_HOST_OWNER -> true // Can do anything
+
+            Role.ROLE_HOST_ADMIN -> true // Can fetch every user, even owner
+
+            Role.ROLE_TENANT -> false // Tenants can't fetch
+
+            Role.ROLE_PLATFORM_OWNER -> {
+                // Can do anything within platform
+                targetUserPlatformId == principalPlatformId
+            }
+
+            Role.ROLE_PLATFORM_ADMIN -> {
+                // Can fetch every account within their platform
+                targetUserPlatformId == principalPlatformId
+            }
+
+            Role.ROLE_PLATFORM_USER -> {
+                // Can only fetch other users (not admins and owner) within their platform
+                targetUserPlatformId == principalPlatformId &&
+                        user.role == Role.ROLE_PLATFORM_USER
+            }
+        }
+    }
 }
