@@ -60,13 +60,13 @@ class UserService(
 
     fun removeUser(
         id: UUID,
-        principalRole: Role
+        jwt: PreAuthenticatedAuthenticationToken
     ): Either<Failure, Unit> {
         val user = userRepository
             .findById(id)
             .getOrElse { return UserFailure.IdNotExists.left() }
-
-        if (!canDeleteUser(principalRole, user)) {
+        
+        if(!authorizationService.canRemoveUser(jwt, user)) {
             return AuthorizationFailure.InsufficientRole.left()
         }
 

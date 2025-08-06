@@ -2,6 +2,7 @@ package com.coursy.users.security
 
 import arrow.core.getOrElse
 import com.coursy.users.model.Role
+import com.coursy.users.model.User
 import com.coursy.users.model.toRole
 import getTenantId
 import org.slf4j.LoggerFactory
@@ -32,7 +33,7 @@ class AuthorizationService {
             logger.warn("Invalid role in JWT: ${it.message}")
             return false
         }
-        val principalTenantId = jwt.getTenantId()
+        val principalPlatformId = jwt.getTenantId()
         
 
         return when (principalRole) {
@@ -40,7 +41,7 @@ class AuthorizationService {
             Role.ROLE_PLATFORM_OWNER, Role.ROLE_PLATFORM_ADMIN -> {
                 // Can only create platform admins within their tenant
                 when (targetRole) {
-                    Role.ROLE_PLATFORM_ADMIN -> targetTenantId == principalTenantId
+                    Role.ROLE_PLATFORM_ADMIN -> targetTenantId == principalPlatformId
                     Role.ROLE_PLATFORM_OWNER -> false // Cannot create other platform owners
                     else -> false
                 }
@@ -49,4 +50,44 @@ class AuthorizationService {
         }
     }
 
+    fun canRemoveUser(jwt: PreAuthenticatedAuthenticationToken, user: User): Boolean {
+        val principalRole = jwt
+            .authorities
+            .first()
+            .toRole()
+            .getOrElse {
+                logger.warn("Invalid role in JWT: ${it.message}")
+                return false
+            }
+
+        val principalPlatformId = jwt.getTenantId()
+        val targetUserPlatformId = user.platformId
+
+        return when (principalRole) {
+            Role.ROLE_HOST_OWNER -> true // Can do anything
+
+            Role.ROLE_HOST_ADMIN -> {
+                // Can remove TENANT and everything related with PLATFORM and STUDENT
+                user.role in listOf(
+                    Role.ROLE_TENANT,
+                    Role.ROLE_PLATFORM_OWNER,
+                    Role.ROLE_PLATFORM_ADMIN,
+                    Role.ROLE_PLATFORM_USER
+                )
+            }
+
+            Role.ROLE_PLATFORM_OWNER -> {
+                // Can do anything within their platform (same tenant)
+                targetUserPlatformId == principalPlatformId
+            }
+
+            Role.ROLE_PLATFORM_ADMIN -> {
+                // Can remove only students within their platform
+                targetUserPlatformId == principalPlatformId &&
+                        user.role == Role.ROLE_PLATFORM_USER
+            }
+
+            Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER -> false // Can't remove anyone
+        }
+    }
 }
