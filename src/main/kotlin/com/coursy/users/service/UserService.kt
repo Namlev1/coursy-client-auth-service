@@ -9,9 +9,7 @@ import com.coursy.users.dto.UserResponse
 import com.coursy.users.dto.toUserResponse
 import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.failure.Failure
-import com.coursy.users.failure.RoleFailure
 import com.coursy.users.failure.UserFailure
-import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.repository.UserRepository
 import com.coursy.users.repository.UserSpecification
@@ -23,7 +21,6 @@ import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
-import readToken
 import java.util.*
 import kotlin.jvm.optionals.getOrElse
 
@@ -116,7 +113,7 @@ class UserService(
             .right()
     }
 
-    private fun createUserEntity(request: RegistrationRequest.Validated, tenantId: UUID?): User {
+    private fun createUserEntity(request: RegistrationRequest.Validated, platformId: UUID?): User {
         val encryptedPassword = passwordEncoder.encode(request.password.value)
         return User(
             email = request.email,
@@ -124,47 +121,7 @@ class UserService(
             role = request.roleName,
             firstName = request.firstName,
             lastName = request.lastName,
-            tenantId = tenantId
+            platformId = platformId
         )
-    }
-
-    private fun canUpdateUserRole(
-        principalRole: Role,
-        newRole: Role,
-        updatedUser: User
-    ): Boolean {
-        if (principalRole == Role.ROLE_ADMIN) {
-            // Admin tries to assign SUPER_ADMIN
-            if (newRole == Role.ROLE_SUPER_ADMIN) {
-                return false
-            }
-
-            // Admin tries to change another ADMIN or SUPER_ADMIN
-            if (updatedUser.role.name == Role.ROLE_SUPER_ADMIN) {
-                return false
-            }
-            if (updatedUser.role.name == Role.ROLE_ADMIN) {
-                return false
-            }
-        }
-        return true
-    }
-
-    private fun canDeleteUser(
-        principalRole: Role,
-        user: User
-    ): Boolean {
-        if (principalRole == Role.ROLE_ADMIN) {
-            // Admin tries to delete SUPER_ADMIN
-            if (user.role.name == Role.ROLE_SUPER_ADMIN) {
-                return false
-            }
-
-            // Admin tries to delete another ADMIN
-            if (user.role.name == Role.ROLE_ADMIN) {
-                return false
-            }
-        }
-        return true
     }
 }
