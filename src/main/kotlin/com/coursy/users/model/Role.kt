@@ -3,7 +3,8 @@ package com.coursy.users.model
 enum class Role {
     HOST_OWNER,
     HOST_ADMIN,
-    TENANT_OWNER,
-    TENANT_ADMIN,
-    STUDENT
+    TENANT,
+    PLATFORM_OWNER,
+    PLATFORM_ADMIN,
+    PLATFORM_USER
 }

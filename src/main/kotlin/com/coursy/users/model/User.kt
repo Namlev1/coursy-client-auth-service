@@ -11,7 +11,7 @@ import java.util.*
 class User(
     @Id
     var id: UUID = UUID.randomUUID(),
-    var tenantId: UUID?,
+    var platformId: UUID?,
     @Column(unique = true)
     var email: Email,
     var firstName: Name,
