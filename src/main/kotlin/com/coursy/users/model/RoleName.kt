@@ -1,9 +1,9 @@
 package com.coursy.users.model
 
 enum class RoleName {
-    ROLE_STUDENT,
-    ROLE_TEACHER,
-    ROLE_ADMIN,
-    ROLE_SUPER_ADMIN,
-    ROLE_MANAGER
+    HOST_OWNER,
+    HOST_ADMIN,
+    TENANT_OWNER,
+    TENANT_ADMIN,
+    STUDENT
 }
