@@ -1,5 +1,6 @@
 package com.coursy.users.security
 
+import arrow.core.Either
 import arrow.core.Option
 import arrow.core.getOrElse
 import com.auth0.jwt.JWT
@@ -13,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import java.util.*
 
 @Component
 class JwtAuthenticationFilter : OncePerRequestFilter() {
@@ -31,11 +33,24 @@ class JwtAuthenticationFilter : OncePerRequestFilter() {
                 response.writer.write(failure.message())
                 return
             }
+            
             val roleString = jwt.getClaim("role")?.asString()
             val authority = SimpleGrantedAuthority("ROLE_$roleString")
 
+            val tenantId = jwt.getClaim("tenantId")?.asString()?.let { tenantIdString ->
+                Either.catch { UUID.fromString(tenantIdString) }
+                    .mapLeft {
+                        log.warn("Invalid tenantId format in JWT: $tenantIdString")
+                        response.status = 400
+                        response.writer.write("Invalid tenantId format")
+                        return
+                    }
+                    .getOrNull()
+            }
+            val principal = AuthenticatedUser(email, tenantId)
+
             val authentication = PreAuthenticatedAuthenticationToken(
-                email,
+                principal,
                 jwt,
                 listOf(authority)
             )
