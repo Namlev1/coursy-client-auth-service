@@ -4,8 +4,10 @@ import arrow.core.getOrElse
 import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.model.toRole
+import com.coursy.users.repository.UserSpecification
 import getPlatformId
 import org.slf4j.LoggerFactory
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
 import java.util.*
@@ -167,6 +169,44 @@ class AuthorizationService {
             }
 
             Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER -> false // Can't update anything
+        }
+    }
+    fun getUserFetchSpecification(jwt: PreAuthenticatedAuthenticationToken): Specification<User>? {
+        val principalRole = jwt
+            .authorities
+            .first()
+            .toRole()
+            .getOrElse {
+                logger.warn("Invalid role in JWT: ${it.message}")
+                return null
+            }
+
+        val principalPlatformId = jwt.getPlatformId()
+
+        return when (principalRole) {
+            Role.ROLE_HOST_OWNER, Role.ROLE_HOST_ADMIN -> {
+                // Can fetch every user - no filtering needed
+                UserSpecification.builder().build()
+            }
+
+            Role.ROLE_PLATFORM_OWNER, Role.ROLE_PLATFORM_ADMIN -> {
+                // Can fetch every account within their platform
+                UserSpecification.builder()
+                    .platformId(principalPlatformId)
+                    .build()
+            }
+
+            Role.ROLE_PLATFORM_USER -> {
+                // Can only fetch other users (not admins) within their platform
+                UserSpecification.builder()
+                    .platformId(principalPlatformId)
+                    .roleIn(listOf(Role.ROLE_PLATFORM_USER, Role.ROLE_TENANT))
+                    .build()
+            }
+
+            Role.ROLE_TENANT -> {
+                return null
+            }
         }
     }
 }

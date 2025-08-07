@@ -1,5 +1,6 @@
 package com.coursy.users.repository
 
+import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.types.Email
 import com.coursy.users.types.Name
@@ -22,12 +23,20 @@ class UserSpecification {
             }
         }
 
-        fun tenantId(tenantId: UUID?) = apply {
+        fun roleIn(roles: List<Role>?) = apply {
+            roles?.let {
+                predicates.add { root, _, cb ->
+                    root.get<Role>("role").`in`(it)
+                }
+            }
+        }
+
+        fun platformId(platformId: UUID?) = apply {
             predicates.add { root, _, cb ->
-                if (tenantId == null) {
-                    cb.isNull(root.get<UUID>("tenantId"))
+                if (platformId == null) {
+                    cb.isNull(root.get<UUID>("platformId"))
                 } else {
-                    cb.equal(root.get<UUID>("tenantId"), tenantId)
+                    cb.equal(root.get<UUID>("platformId"), platformId)
                 }
             }
         }

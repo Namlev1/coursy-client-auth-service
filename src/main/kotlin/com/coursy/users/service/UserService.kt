@@ -44,7 +44,7 @@ class UserService(
         val specification = UserSpecification
             .builder()
             .email(request.email)
-            .tenantId(tenantId)
+            .platformId(tenantId)
             .build()
 
         if (userRepository.exists(specification)) {
@@ -89,10 +89,12 @@ class UserService(
         return user.toUserResponse().right()
     }
 
-    fun getUserPage(pageRequest: PageRequest) =
-        userRepository.findAll(pageRequest)
+    fun getUserPage(jwt: PreAuthenticatedAuthenticationToken, pageRequest: PageRequest) {
+        val specification = authorizationService.getUserFetchSpecification(jwt)
+        userRepository.findAll(specification, pageRequest)
             .map { it.toUserResponse() }
             .let { pagedResourcesAssembler.toModel(it) }
+    }
 
     fun updateUserRole(
         userId: UUID,
