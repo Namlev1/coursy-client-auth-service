@@ -1,12 +1,13 @@
 package com.coursy.users.security
 
-import arrow.core.getOrElse
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.model.Role
 import com.coursy.users.model.User
-import com.coursy.users.model.toRole
-import com.coursy.users.repository.UserSpecification
 import getPlatformId
-import org.slf4j.LoggerFactory
+import getRole
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
@@ -14,9 +15,11 @@ import java.util.*
 
 @Service
 class AuthorizationService {
-    private val logger = LoggerFactory.getLogger(this::class.java)
-
-    fun canCreateUserWithRole(jwt: PreAuthenticatedAuthenticationToken?, targetTenantId: UUID?, targetRole: Role): Boolean {
+    fun canCreateUserWithRole(
+        jwt: PreAuthenticatedAuthenticationToken?,
+        targetTenantId: UUID?,
+        targetRole: Role
+    ): Boolean {
         // No authentication required for basic account creation
         if (targetRole in listOf(Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER)) {
             return true
@@ -26,17 +29,10 @@ class AuthorizationService {
         if (jwt == null) {
             return false
         }
-        
-        val principalRole = jwt
-            .authorities
-            .first()
-            .toRole()
-            .getOrElse {
-            logger.warn("Invalid role in JWT: ${it.message}")
-            return false
-        }
+
+        val principalRole = jwt.getRole()
         val principalPlatformId = jwt.getPlatformId()
-        
+
 
         return when (principalRole) {
             Role.ROLE_HOST_OWNER, Role.ROLE_HOST_ADMIN -> true // Can create any admin role
@@ -48,19 +44,13 @@ class AuthorizationService {
                     else -> false
                 }
             }
+
             else -> false
         }
     }
 
     fun canRemoveUser(jwt: PreAuthenticatedAuthenticationToken, user: User): Boolean {
-        val principalRole = jwt
-            .authorities
-            .first()
-            .toRole()
-            .getOrElse {
-                logger.warn("Invalid role in JWT: ${it.message}")
-                return false
-            }
+        val principalRole = jwt.getRole()
 
         val principalPlatformId = jwt.getPlatformId()
         val targetUserPlatformId = user.platformId
@@ -92,52 +82,9 @@ class AuthorizationService {
             Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER -> false // Can't remove anyone
         }
     }
-    fun canFetchUser(jwt: PreAuthenticatedAuthenticationToken, user: User): Boolean {
-        val principalRole = jwt
-            .authorities
-            .first()
-            .toRole()
-            .getOrElse {
-                logger.warn("Invalid role in JWT: ${it.message}")
-                return false
-            }
 
-        val principalPlatformId = jwt.getPlatformId()
-        val targetUserPlatformId = user.platformId
-
-        return when (principalRole) {
-            Role.ROLE_HOST_OWNER -> true // Can do anything
-
-            Role.ROLE_HOST_ADMIN -> true // Can fetch every user, even owner
-
-            Role.ROLE_TENANT -> false // Tenants can't fetch
-
-            Role.ROLE_PLATFORM_OWNER -> {
-                // Can do anything within platform
-                targetUserPlatformId == principalPlatformId
-            }
-
-            Role.ROLE_PLATFORM_ADMIN -> {
-                // Can fetch every account within their platform
-                targetUserPlatformId == principalPlatformId
-            }
-
-            Role.ROLE_PLATFORM_USER -> {
-                // Can only fetch other users (not admins and owner) within their platform
-                targetUserPlatformId == principalPlatformId &&
-                        user.role == Role.ROLE_PLATFORM_USER
-            }
-        }
-    }
     fun canUpdateUserRole(jwt: PreAuthenticatedAuthenticationToken, targetUser: User, newRole: Role): Boolean {
-        val principalRole = jwt
-            .authorities
-            .first()
-            .toRole()
-            .getOrElse {
-                logger.warn("Invalid role in JWT: ${it.message}")
-                return false
-            }
+        val principalRole = jwt.getRole()
 
         val principalPlatformId = jwt.getPlatformId()
         val targetUserPlatformId = targetUser.platformId
@@ -171,42 +118,36 @@ class AuthorizationService {
             Role.ROLE_TENANT, Role.ROLE_PLATFORM_USER -> false // Can't update anything
         }
     }
-    fun getUserFetchSpecification(jwt: PreAuthenticatedAuthenticationToken): Specification<User>? {
-        val principalRole = jwt
-            .authorities
-            .first()
-            .toRole()
-            .getOrElse {
-                logger.warn("Invalid role in JWT: ${it.message}")
-                return null
-            }
+
+    fun canFetchUser(jwt: PreAuthenticatedAuthenticationToken, user: User): Boolean {
+        val accessLevel = getUserAccessLevel(jwt) ?: return false
+        return accessLevel.canAccess(user)
+    }
+
+    fun getUserFetchSpecification(jwt: PreAuthenticatedAuthenticationToken): Either<AuthorizationFailure, Specification<User>> {
+        val accessLevel = getUserAccessLevel(jwt)
+            ?: return AuthorizationFailure.InsufficientRole.left()
+        return accessLevel.toSpecification().right()
+    }
+
+    private fun getUserAccessLevel(jwt: PreAuthenticatedAuthenticationToken): UserAccessLevel? {
+        val principalRole = jwt.getRole()
 
         val principalPlatformId = jwt.getPlatformId()
 
         return when (principalRole) {
-            Role.ROLE_HOST_OWNER, Role.ROLE_HOST_ADMIN -> {
-                // Can fetch every user - no filtering needed
-                UserSpecification.builder().build()
-            }
+            Role.ROLE_HOST_OWNER, Role.ROLE_HOST_ADMIN -> UserAccessLevel.All
 
-            Role.ROLE_PLATFORM_OWNER, Role.ROLE_PLATFORM_ADMIN -> {
-                // Can fetch every account within their platform
-                UserSpecification.builder()
-                    .platformId(principalPlatformId)
-                    .build()
-            }
+            Role.ROLE_PLATFORM_OWNER, Role.ROLE_PLATFORM_ADMIN ->
+                UserAccessLevel.PlatformAll(principalPlatformId)
 
-            Role.ROLE_PLATFORM_USER -> {
-                // Can only fetch other users (not admins) within their platform
-                UserSpecification.builder()
-                    .platformId(principalPlatformId)
-                    .roleIn(listOf(Role.ROLE_PLATFORM_USER, Role.ROLE_TENANT))
-                    .build()
-            }
+            Role.ROLE_PLATFORM_USER ->
+                UserAccessLevel.PlatformFiltered(
+                    principalPlatformId,
+                    listOf(Role.ROLE_PLATFORM_USER, Role.ROLE_TENANT)
+                )
 
-            Role.ROLE_TENANT -> {
-                return null
-            }
+            Role.ROLE_TENANT -> null
         }
     }
 }

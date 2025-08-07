@@ -1,6 +1,7 @@
 package com.coursy.users.service
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.coursy.users.dto.RegistrationRequest
@@ -18,6 +19,8 @@ import getId
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
+import org.springframework.hateoas.EntityModel
+import org.springframework.hateoas.PagedModel
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
@@ -89,11 +92,17 @@ class UserService(
         return user.toUserResponse().right()
     }
 
-    fun getUserPage(jwt: PreAuthenticatedAuthenticationToken, pageRequest: PageRequest) {
-        val specification = authorizationService.getUserFetchSpecification(jwt)
-        userRepository.findAll(specification, pageRequest)
+    fun getUserPage(
+        jwt: PreAuthenticatedAuthenticationToken,
+        pageRequest: PageRequest
+    ): Either<Failure, PagedModel<EntityModel<UserResponse>>> {
+        val specification = authorizationService
+            .getUserFetchSpecification(jwt)
+            .getOrElse { failure -> return failure.left() }
+        return userRepository.findAll(specification, pageRequest)
             .map { it.toUserResponse() }
             .let { pagedResourcesAssembler.toModel(it) }
+            .right()
     }
 
     fun updateUserRole(
