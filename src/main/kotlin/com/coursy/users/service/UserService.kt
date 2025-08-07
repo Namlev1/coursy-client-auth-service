@@ -35,26 +35,37 @@ class UserService(
     private val authorizationService: AuthorizationService,
     private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
 ) {
-    fun createUser(
+    fun createHostUser(
         request: RegistrationRequest.Validated,
-        tenantId: UUID?,
+        jwt: PreAuthenticatedAuthenticationToken
+    ) = createUser(request, null, jwt)
+
+    fun createPlatformUser(
+        request: RegistrationRequest.Validated,
+        platformId: UUID?,
+        jwt: PreAuthenticatedAuthenticationToken
+    ) = createUser(request, platformId, jwt)
+
+    private fun createUser(
+        request: RegistrationRequest.Validated,
+        platformId: UUID?,
         jwt: PreAuthenticatedAuthenticationToken
     ): Either<Failure, Unit> {
-        if (!authorizationService.canCreateUserWithRole(jwt, tenantId, request.roleName)) {
+        if (!authorizationService.canCreateUserWithRole(jwt, platformId, request.roleName)) {
             return AuthorizationFailure.InsufficientRole.left()
         }
 
         val specification = UserSpecification
             .builder()
             .email(request.email)
-            .platformId(tenantId)
+            .platformId(platformId)
             .build()
 
         if (userRepository.exists(specification)) {
             return UserFailure.EmailAlreadyExists.left()
         }
 
-        val user = createUserEntity(request, tenantId)
+        val user = createUserEntity(request, platformId)
         userRepository.save(user)
         return Unit.right()
     }
