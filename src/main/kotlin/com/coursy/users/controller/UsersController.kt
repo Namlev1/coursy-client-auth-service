@@ -11,31 +11,12 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
-@RequestMapping("/api/users/")
+@RequestMapping("/api/users")
 @RestController
 class UsersController(
     private val userService: UserService,
     private val httpFailureResolver: HttpFailureResolver
 ) {
-
-//    @PostMapping("/register")
-//    fun createUser(
-//        @PathVariable platformId: UUID,
-//        @RequestBody request: RegistrationRequest,
-//        jwt: PreAuthenticatedAuthenticationToken?
-//    ): ResponseEntity<Any> {
-//        val result = request
-//            .validate()
-//            .flatMap { validated ->
-//                userService.createPlatformUser(validated, platformId, jwt)
-//            }
-//
-//        return result.fold(
-//            { failure -> httpFailureResolver.handleFailure(failure) },
-//            { ResponseEntity.status(HttpStatus.CREATED).build() }
-//        )
-//    }
-
     @GetMapping("/me")
     fun getCurrentUser(
         jwt: PreAuthenticatedAuthenticationToken
