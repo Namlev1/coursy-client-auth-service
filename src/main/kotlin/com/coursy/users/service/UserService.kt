@@ -43,13 +43,13 @@ class UserService(
     fun createPlatformUser(
         request: RegistrationRequest.Validated,
         platformId: UUID?,
-        jwt: PreAuthenticatedAuthenticationToken
+        jwt: PreAuthenticatedAuthenticationToken?
     ) = createUser(request, platformId, jwt)
 
     private fun createUser(
         request: RegistrationRequest.Validated,
         platformId: UUID?,
-        jwt: PreAuthenticatedAuthenticationToken
+        jwt: PreAuthenticatedAuthenticationToken?
     ): Either<Failure, Unit> {
         if (!authorizationService.canCreateUserWithRole(jwt, platformId, request.roleName)) {
             return AuthorizationFailure.InsufficientRole.left()
