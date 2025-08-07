@@ -144,7 +144,7 @@ class AuthorizationService {
             Role.ROLE_PLATFORM_USER ->
                 UserAccessLevel.PlatformFiltered(
                     principalPlatformId,
-                    listOf(Role.ROLE_PLATFORM_USER, Role.ROLE_TENANT)
+                    listOf(Role.ROLE_PLATFORM_USER)
                 )
 
             Role.ROLE_TENANT -> null
