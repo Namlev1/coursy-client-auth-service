@@ -37,7 +37,7 @@ class UserService(
 ) {
     fun createHostUser(
         request: RegistrationRequest.Validated,
-        jwt: PreAuthenticatedAuthenticationToken
+        jwt: PreAuthenticatedAuthenticationToken?
     ) = createUser(request, null, jwt)
 
     fun createPlatformUser(
