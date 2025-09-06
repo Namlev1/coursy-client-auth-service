@@ -1,0 +1,3 @@
+services:
+  auth:
+    url: http://localhost:8085
