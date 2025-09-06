@@ -31,7 +31,6 @@ import kotlin.jvm.optionals.getOrElse
 @Transactional
 class UserService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
     private val authorizationService: AuthorizationService,
     private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
 ) {
@@ -136,7 +135,6 @@ class UserService(
     }
 
     private fun createUserEntity(request: RegistrationRequest.Validated, platformId: UUID?): User {
-        val encryptedPassword = passwordEncoder.encode(request.password.value)
         return User(
             email = request.email,
             password = encryptedPassword,
