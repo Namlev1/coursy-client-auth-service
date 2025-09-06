@@ -11,6 +11,7 @@ import com.coursy.users.dto.toUserResponse
 import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.failure.Failure
 import com.coursy.users.failure.UserFailure
+import com.coursy.users.internal.auth.AuthServiceClient
 import com.coursy.users.model.User
 import com.coursy.users.repository.UserRepository
 import com.coursy.users.repository.UserSpecification
@@ -21,7 +22,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.web.PagedResourcesAssembler
 import org.springframework.hateoas.EntityModel
 import org.springframework.hateoas.PagedModel
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Service
 import java.util.*
@@ -32,6 +32,7 @@ import kotlin.jvm.optionals.getOrElse
 class UserService(
     private val userRepository: UserRepository,
     private val authorizationService: AuthorizationService,
+    private val authServiceClient: AuthServiceClient,
     private val pagedResourcesAssembler: PagedResourcesAssembler<UserResponse>
 ) {
     fun createHostUser(
@@ -66,6 +67,11 @@ class UserService(
 
         val user = createUserEntity(request, platformId)
         userRepository.save(user)
+
+        // TODO: if error, rollback user creation
+        authServiceClient
+            .createUser(request.email, request.password, user.id)
+        
         return Unit.right()
     }
 
@@ -137,7 +143,6 @@ class UserService(
     private fun createUserEntity(request: RegistrationRequest.Validated, platformId: UUID?): User {
         return User(
             email = request.email,
-            password = encryptedPassword,
             role = request.roleName,
             firstName = request.firstName,
             lastName = request.lastName,
