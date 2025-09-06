@@ -17,7 +17,7 @@ fun User.toUserResponse(): UserResponse {
     return UserResponse(
         id = this.id,
         email = this.email,
-        roleName = this.role.name.name,
+        roleName = this.role.name,
         firstName = this.firstName,
         lastName = this.lastName
     )
