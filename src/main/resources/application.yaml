@@ -11,8 +11,5 @@ spring:
 
 #  profiles:
 #    active: setup
-app:
-  setup:
-    roles: "STUDENT, TEACHER, SUPER_ADMIN" # Default roles
 server:
   port: 8081
