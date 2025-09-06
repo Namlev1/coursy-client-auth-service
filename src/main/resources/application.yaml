@@ -8,8 +8,5 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
-#  profiles:
-#    active: setup
 server:
   port: 8081
