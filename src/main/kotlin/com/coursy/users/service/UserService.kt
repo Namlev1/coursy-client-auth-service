@@ -12,6 +12,7 @@ import com.coursy.users.failure.AuthorizationFailure
 import com.coursy.users.failure.Failure
 import com.coursy.users.failure.UserFailure
 import com.coursy.users.internal.auth.AuthServiceClient
+import com.coursy.users.model.Role
 import com.coursy.users.model.User
 import com.coursy.users.repository.UserRepository
 import com.coursy.users.repository.UserSpecification
@@ -138,6 +139,14 @@ class UserService(
             .save(user)
             .toUserResponse()
             .right()
+    }
+
+    fun getUserRole(userId: UUID): Either<UserFailure, Role> {
+        val user = userRepository
+            .findById(userId)
+            .getOrElse { return UserFailure.IdNotExists.left() }
+        return user.role.right()
+
     }
 
     private fun createUserEntity(request: RegistrationRequest.Validated, platformId: UUID?): User {
