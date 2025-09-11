@@ -109,6 +109,13 @@ class UserService(
         return user.toUserResponse().right()
     }
 
+    fun getUser(id: UUID): Either<UserFailure, UserResponse> {
+        val user = userRepository
+            .findById(id)
+            .getOrElse { return UserFailure.IdNotExists.left() }
+        return user.toUserResponse().right()
+    }
+
     fun getUserPage(
         jwt: PreAuthenticatedAuthenticationToken,
         pageRequest: PageRequest

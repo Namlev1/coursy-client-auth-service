@@ -7,6 +7,7 @@ import java.util.*
 
 data class UserResponse(
     val id: UUID,
+    val platformId: UUID?,
     val email: Email,
     val firstName: Name,
     val lastName: Name,
@@ -16,6 +17,7 @@ data class UserResponse(
 fun User.toUserResponse(): UserResponse {
     return UserResponse(
         id = this.id,
+        platformId = this.platformId,
         email = this.email,
         roleName = this.role.name,
         firstName = this.firstName,

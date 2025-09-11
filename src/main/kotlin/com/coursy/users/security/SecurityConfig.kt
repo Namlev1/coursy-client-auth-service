@@ -21,7 +21,11 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it
-                    .requestMatchers("/api/users/host/register", "/api/users/platform/{platformId}/register")
+                    .requestMatchers(
+                        "/api/users/host/register",
+                        "/api/users/platform/{platformId}/register",
+                        "/api/internal/users/**"
+                    )
                     .permitAll()
 
                     .anyRequest()
